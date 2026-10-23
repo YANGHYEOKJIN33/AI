@@ -140,5 +140,5 @@ body.view-workspace .room { display: none; }
   .lesson__todo { font-size: var(--fs-xs); }
   .controlbar { padding-top: 2px; padding-bottom: 2px; }
   .actionbar { padding-top: var(--sp-1); }
-  .action-card__detail { display: none; }
+  .action-card__plain { display: none; }   /* 일반 설명은 접고, 이 장면의 해설은 남긴다 */
 }

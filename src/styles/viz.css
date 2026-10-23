@@ -149,6 +149,7 @@
 .flowarrow__head { font-size: 18px; line-height: 1; }
 .flowarrow__label { font-size: 10px; width: 58px; word-break: keep-all; text-align: center; line-height: 1.2; }
 .flowarrow--down { align-self: stretch; flex-direction: row; justify-content: center; }
+.flowarrow--down .flowarrow__label { width: auto; max-width: none; }
 
 .sbox {
   border: 1.5px solid var(--border);

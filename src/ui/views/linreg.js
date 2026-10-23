@@ -35,7 +35,7 @@ function lossChart(history, { title = '📉 손실 기록 (history)' } = {}) {
   const n = Math.max(history.length, 1);
   const maxL = Math.max(1, ...history.filter(Number.isFinite));
   const chart = createPlot({
-    x: [0, Math.max(5, n)], y: [0, maxL * 1.08], width: 260, height: 92, axes: true, tickLabels: false,
+    x: [0, Math.max(5, n)], y: [0, maxL * 1.08], width: 300, height: 72, axes: true, tickLabels: false,
     tick: Math.max(1, Math.ceil(n / 10)), ytick: maxL / 2, pad: { l: 8, r: 6, t: 6, b: 8 }, ariaLabel: '손실 기록 그래프',
   });
   const pts = history.map((l, i) => [i + 1, Math.min(l, maxL)]);
@@ -120,7 +120,7 @@ export default {
       el('span.legend__item', {}, el('span.mark', { style: 'color:var(--cat-3)' }, '┃'), '오차(+)'));
   },
 
-  extra(v, { page, player }) {
+  extra(v, { page, refreshPlot }) {
     const chart = lossChart(v.ds.history);
     if (page !== 'review') return chart;
     let tryBox;
@@ -129,18 +129,28 @@ export default {
     } else if (v.ds.diverged) {
       tryBox = el('div.tryit', {}, el('div.tryit__title', {}, '⚠ 발산한 직선으로는 예측할 수 없어요'), el('div', {}, '③쪽에서 학습률을 0.05로 돌려 보세요.'));
     } else {
-      const y = v.ds.w * tryX + v.ds.b;
-      const out = el('strong.tryit__answer', {}, `${fmt(y, 1)}점`);
-      const label = el('span', {}, `공부 ${tryX}시간 → `);
+      const { w, b } = v.ds;
+      const out = el('strong.tryit__answer');
+      const label = el('span');
+      const formula = el('span');
+      const show = () => {
+        label.textContent = `공부 ${tryX}시간 → `;
+        out.textContent = `${fmt(w * tryX + b, 1)}점`;
+        const y = w * tryX + b;
+        formula.textContent = `  (= ${fmt(w)} × ${tryX} + ${fmt(b)})` +
+          (y > 10 ? '  ⚠ 10점 만점을 넘었어요 — 직선은 데이터 범위 밖에서도 그대로 뻗어요(외삽)' : '');
+      };
+      show();
       tryBox = el('div.tryit', {},
         el('div.tryit__title', {}, '👆 써 보기 — 공부 시간을 바꿔 예측 점수를 보세요'),
+        // 끄는 동안 슬라이더를 다시 만들지 않도록 글자와 그림만 고친다
         el('input', {
           type: 'range', min: '0', max: String(XMAX), step: '0.5', value: String(tryX), 'aria-label': '공부 시간',
-          oninput: (e) => { tryX = +e.target.value; player.goTo(player.view().index); },
+          oninput: (e) => { tryX = +e.target.value; show(); refreshPlot(); },
         }),
-        el('div.tryit__row', {}, label, out, el('span', {}, `  (= ${fmt(v.ds.w)} × ${tryX} + ${fmt(v.ds.b)})`)));
+        el('div.tryit__row', {}, label, out, formula));
     }
-    return el('div', { style: 'display:flex;flex-direction:column;gap:6px' }, chart, tryBox);
+    return el('div', { style: 'display:flex;flex-direction:column;gap:6px' }, tryBox, chart);
   },
 
   data(v) {

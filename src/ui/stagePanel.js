@@ -25,7 +25,14 @@ export function mountStagePanel(root, store, player, views) {
 
   function ctx() {
     const state = store.get();
-    return { store, player, state, page: currentStep(state)?.id };
+    return { store, player, state, page: currentStep(state)?.id, refreshPlot };
+  }
+
+  /** 그림만 다시 그린다 — 써 보기 슬라이더처럼 옆 칸을 갈아 끼우면 안 되는 조작에 쓴다 */
+  function refreshPlot() {
+    const v = player.view();
+    if (v.empty || !plot) return;
+    plot.update(views[v.algoId].shapes(v, ctx()));
   }
 
   function draw() {
