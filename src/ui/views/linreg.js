@@ -74,7 +74,7 @@ export default {
 
   createPlot() {
     return createPlot({
-      x: [0, XMAX], y: [0, YMAX], width: 320, height: 296, xLabel: `${STUDY.xName}(시간) →`, yLabel: `${STUDY.yName} →`,
+      x: [0, XMAX], y: [0, YMAX], width: 320, height: 296, clip: true, xLabel: `${STUDY.xName}(시간) →`, yLabel: `${STUDY.yName} →`,
       ariaLabel: '공부 시간과 점수, 학습 중인 직선',
     });
   },

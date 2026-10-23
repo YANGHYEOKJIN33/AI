@@ -1,0 +1,128 @@
+/* ============================================================
+   방 — 📦 자료구조 도구 · ✅ 정리·확인
+   8-퍼즐 사이트의 자료구조 탭처럼 왼쪽 → 오른쪽으로 흐른다.
+   ============================================================ */
+
+.troom {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--sp-3) var(--sp-4);
+}
+.troom__head { display: flex; align-items: center; gap: var(--sp-3); }
+.troom__icon { font-size: calc(1.8rem * var(--scale)); line-height: 1; }
+.troom__titles { min-width: 0; }
+.troom__title { font-size: var(--fs-lg); }
+.troom__rule { margin: 2px 0 0; color: var(--text-muted); font-size: var(--fs-sm); }
+.troom__subtitle { font-size: var(--fs-md); margin: var(--sp-2) 0 0; }
+.troom__controls { display: flex; align-items: center; gap: var(--sp-1) var(--sp-2); flex-wrap: wrap; padding: var(--sp-2); background: var(--current-bg); border-radius: var(--radius-sm); }
+.troom__hint { font-size: var(--fs-xs); color: var(--text-muted); }
+.troom__label { font-size: var(--fs-sm); font-weight: 700; }
+.troom__select { font-size: var(--fs-sm); display: inline-flex; align-items: center; gap: 4px; }
+.troom__select select { padding: 2px var(--sp-2); }
+.troom__body { min-width: 0; }
+.troom__note { font-size: var(--fs-xs); color: var(--text-muted); margin: var(--sp-1) 0 0; }
+.troom__msg {
+  padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm);
+  border: 1px solid var(--current); background: var(--current-bg); font-size: var(--fs-sm); font-weight: 600;
+  animation: narr-in .2s ease;
+}
+.troom__msg--ok { border-color: var(--open); background: var(--open-bg); }
+.troom__msg--warn { border-color: var(--path); background: var(--path-bg); }
+.troom__quiz { padding: var(--sp-2) var(--sp-3); border: 2px solid var(--open); background: var(--open-bg); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px; }
+.troom__links { display: flex; align-items: center; gap: var(--sp-1) var(--sp-2); flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: var(--sp-2); }
+.troom__linkcap { font-size: var(--fs-sm); font-weight: 700; }
+.troom__link { font-size: var(--fs-xs); }
+.troom__where { color: var(--text-muted); font-weight: 400; }
+
+/* 흐름: 원래 데이터 ➜ 연산 ➜ 결과 */
+.tflow { display: flex; align-items: flex-start; gap: var(--sp-2); }
+.tflow__col { flex: 0 0 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.tflow__col--grow { flex: 1 1 0; min-width: 220px; }
+.tflow__cap { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
+.tflow__arrow { align-self: center; font-size: 22px; color: var(--text-muted); flex: 0 0 auto; }
+.tplot { width: min(330px, 34vw); aspect-ratio: 300 / 280; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.tplot svg { width: 100%; height: 100%; }
+
+.troom__code { margin: 0; padding: var(--sp-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); font-size: var(--fs-xs); display: flex; flex-direction: column; overflow-x: auto; }
+.troom__codeline { display: block; white-space: pre; padding: 1px 4px; border-radius: 4px; cursor: default; }
+.troom__codeline[onclick], .troom__code .troom__codeline:hover { background: var(--surface); }
+.troom__codeline.is-on { background: var(--current-bg); color: var(--current); font-weight: 700; box-shadow: inset 3px 0 0 var(--current); }
+.troom__codeline.is-new { background: var(--open-bg); }
+
+.dtable--big { font-size: var(--fs-sm); }
+.dtable--big th, .dtable--big td { padding: 2px 8px; }
+.dtable__roles th { font-size: var(--fs-xs); color: var(--current); font-weight: 700; position: static; }
+.dtable tr.is-new td { background: var(--open-bg); }
+.dtable td { transition: background .2s ease; }
+
+.calc--big .calc__rows { font-size: var(--fs-sm); gap: 4px; }
+.calcstep { color: var(--text-muted); }
+.calcstep.is-done { color: var(--text); }
+.calcstep.is-on { color: var(--current); font-weight: 700; animation: narr-in .25s ease; }
+
+.tuple--card { font-size: var(--fs-sm); padding: 3px 8px; }
+.bin__mean { font-family: var(--font-code); font-size: var(--fs-xs); padding: 2px 6px 4px; border-top: 1px dashed var(--c, var(--border)); color: var(--text); }
+
+.linkbtn { border: 0; background: none; padding: 0; color: var(--current); text-decoration: underline; text-underline-offset: 2px; font: inherit; cursor: pointer; }
+a.pill--link { display: inline-flex; align-items: center; text-decoration: none; border: 1px solid var(--border); color: var(--text); background: var(--surface); }
+
+/* 복습 지도 */
+.troom--map { gap: var(--sp-3); }
+.mapcards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-3); }
+.mapcard {
+  display: flex; flex-direction: column; gap: var(--sp-1);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-3);
+  background: var(--surface); box-shadow: var(--shadow);
+}
+.mapcard__head { display: flex; align-items: center; gap: var(--sp-2); }
+.mapcard__icon { font-size: calc(1.8rem * var(--scale)); }
+.mapcard__name { font-size: var(--fs-md); }
+.mapcard__en { font-size: var(--fs-xs); color: var(--text-muted); font-family: var(--font-code); }
+.mapcard__tags { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+.mapcard__story { margin: 0; font-size: var(--fs-sm); color: var(--text); }
+.mapcard__flowcap { font-size: var(--fs-xs); font-weight: 700; color: var(--current); margin-top: var(--sp-1); }
+.mapcard__flow { margin: 0 0 var(--sp-2); font-family: var(--font-code); font-size: var(--fs-xs); line-height: 1.6; flex: 1 1 auto; }
+.mapcard .pill { align-self: flex-start; }
+
+.matrixwrap { overflow-x: auto; }
+.matrix { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
+.matrix th, .matrix td { border: 1px solid var(--border); padding: var(--sp-1) var(--sp-2); text-align: left; vertical-align: top; }
+.matrix thead th { background: var(--surface-2); }
+.matrix tbody th { white-space: nowrap; }
+.matrix td.is-used { background: var(--open-bg); color: var(--text); }
+.matrix--summary td { font-size: var(--fs-xs); }
+.matrix__row { cursor: pointer; }
+.matrix__row:hover td, .matrix__row:hover th { background: var(--surface-2); }
+.matrix__flow { font-family: var(--font-code); }
+.keywords { display: flex; gap: var(--sp-1) var(--sp-3); flex-wrap: wrap; font-size: var(--fs-sm); }
+
+/* 이해 확인 */
+.quizlist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+.quiz__item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); background: var(--surface); }
+.quiz__q { font-weight: 700; margin-bottom: var(--sp-1); font-size: var(--fs-sm); }
+.quiz__opts { display: flex; flex-direction: column; gap: 4px; }
+.quiz__opt { text-align: left; white-space: normal; font-size: var(--fs-sm); }
+.quiz__opt--ok { border-color: var(--open) !important; background: var(--open-bg) !important; color: var(--text) !important; font-weight: 700; opacity: 1 !important; }
+.quiz__opt--no { border-color: var(--danger) !important; background: var(--closed-bg) !important; opacity: 1 !important; }
+.quiz__why { margin-top: var(--sp-1); font-size: var(--fs-xs); color: var(--text-muted); }
+
+@media (max-width: 1100px) {
+  .mapcards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .tflow { flex-direction: column; align-items: stretch; }
+  .tflow__arrow { transform: rotate(90deg); align-self: center; }
+  .tplot { width: 100%; max-width: 420px; align-self: center; }
+  .quizlist { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .mapcards { grid-template-columns: 1fr; }
+  .troom { padding: var(--sp-2); }
+}

@@ -89,7 +89,7 @@
 .pt.centroid.cat-3 path { fill: var(--cat-3); }
 .pt.centroid.cat-4 path { fill: var(--cat-4); }
 .pt.centroid .pt__label { font-size: 10px; font-weight: 700; fill: var(--text); }
-.pt.ghost path { fill: none; stroke-dasharray: 3 2; }
+.pt.ghost path, .pt.centroid.ghost path { fill: var(--surface); fill-opacity: .55; stroke-dasharray: 4 2; stroke-width: 2; }
 .pt.unassigned path { stroke: var(--closed); fill: var(--surface); stroke-dasharray: 2 2; }
 
 .shape-line.dline { stroke: var(--border-strong); stroke-width: 1; stroke-dasharray: 3 3; }

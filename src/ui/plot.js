@@ -77,6 +77,7 @@ function tween(node, target, apply) {
  *   width,height: SVG 좌표계 크기(화면에서는 비율만 유지하며 늘어난다)
  *   xLabel,yLabel, tick(눈금 간격), grid(격자), axes(축 표시)
  *   onClick(x, y): 그림을 누른 데이터 좌표
+ *   clip        : 그림 영역 밖으로 나간 모양을 잘라 낼지
  */
 export function createPlot(o) {
   const W = o.width ?? 360;
@@ -98,6 +99,16 @@ export function createPlot(o) {
   const gridLayer = svgEl('g', { class: 'plot__grid' });
   const layer = svgEl('g', { class: 'plot__shapes' });
   svg.append(gridLayer, layer);
+  // clip: 그림 영역 밖으로 나가는 선·점은 잘라 낸다 (발산하는 값 등)
+  if (o.clip) {
+    const id = `clip-${Math.random().toString(36).slice(2, 9)}`;
+    const defs = svgEl('defs');
+    const cp = svgEl('clipPath', { id });
+    cp.append(svgEl('rect', { x: pad.l, y: pad.t, width: W - pad.l - pad.r, height: H - pad.t - pad.b }));
+    defs.append(cp);
+    svg.prepend(defs);
+    layer.setAttribute('clip-path', `url(#${id})`);
+  }
 
   if (axes) {
     const tick = o.tick ?? 1;
