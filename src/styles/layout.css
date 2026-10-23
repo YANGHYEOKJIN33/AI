@@ -1,0 +1,144 @@
+/* ============================================================
+   화면 배치 (8-퍼즐 사이트와 같은 원칙)
+   - 데스크톱: 페이지는 스크롤하지 않고, 넘치는 것은 각 패널 안에서만 스크롤
+   - 알고리즘 쪽: 왼쪽 = 코드 / 오른쪽 위 = 그림 / 오른쪽 아래 = 자료구조
+   - 1280×720(교실 프로젝터)에서 스크롤 없이 핵심이 보인다
+   ============================================================ */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+.app > * { flex: 0 0 auto; }
+.workspace,
+.room { flex: 1 1 auto; min-height: 0; }
+
+/* --- 상단 막대 --- */
+.topbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.topbar__row { display: flex; align-items: center; gap: var(--sp-3) var(--sp-4); flex-wrap: wrap; }
+.topbar__title { font-size: var(--fs-lg); line-height: 1.2; min-width: 0; flex-shrink: 1; }
+.topbar__title small { display: block; font-size: var(--fs-xs); font-weight: 400; color: var(--text-muted); }
+.topbar__spacer { flex: 1 1 auto; }
+.topbar__tools { display: flex; gap: var(--sp-1); flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
+.modetabs { display: flex; gap: var(--sp-1); flex: 0 0 auto; flex-wrap: wrap; }
+.modetab { font-weight: 700; }
+.modetab[aria-selected="true"] { background: var(--current); border-color: var(--current); color: #fff; }
+.subtabs { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.subtabs[hidden] { display: none; }
+.subtabs__label { font-size: var(--fs-sm); color: var(--text-muted); font-weight: 700; }
+.subtab { font-size: var(--fs-sm); padding: var(--sp-1) var(--sp-3); }
+
+/* --- 레슨 막대 --- */
+.lesson {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-4);
+  flex-wrap: wrap;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.lesson__top { flex: 0 0 auto; display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.lesson__text { flex: 1 1 340px; min-width: 0; }
+.lesson__navs { flex: 0 0 auto; display: flex; gap: var(--sp-2); }
+
+/* --- 실행 제어 --- */
+.controlbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
+  padding: var(--sp-1) var(--sp-4);
+  background: var(--current-bg);
+  border-bottom: 1px solid var(--border);
+}
+.controlbar .ctrl { padding: var(--sp-1) var(--sp-3); }
+.controlbar .ctrl[hidden] { display: none; }
+
+/* --- 동작 카드 + 예측 퀴즈 --- */
+.actionbar {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4) 0;
+  align-items: stretch;
+}
+.action-slot { flex: 1 1 auto; min-width: 0; display: flex; }
+.action-slot > * { flex: 1 1 auto; }
+
+/* --- 알고리즘 작업대: 3분할 --- */
+.workspace {
+  display: grid;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  grid-template-columns: minmax(280px, 0.8fr) minmax(520px, 1.8fr);
+  grid-template-rows: minmax(12rem, 0.95fr) minmax(14rem, 1.15fr);
+  grid-template-areas:
+    "code stage"
+    "code data";
+  min-height: 0;
+  overflow: hidden;
+}
+.panel--code  { grid-area: code; }
+.panel--stage { grid-area: stage; }
+.panel--data  { grid-area: data; }
+/* ③쪽: 의사코드와 파이썬이 나란히 — 왼쪽을 넓힌다 */
+.workspace[data-page="python"] { grid-template-columns: minmax(380px, 1.25fr) minmax(480px, 1.5fr); }
+
+/* --- 방(도구·정리) --- */
+.room { overflow: auto; padding: var(--sp-3) var(--sp-4); }
+
+/* 어떤 화면을 보일까 */
+body.view-room .workspace,
+body.view-room .controlbar,
+body.view-room .actionbar { display: none; }
+body.view-workspace .room { display: none; }
+
+/* --- 좁은 화면: 세로 1열, 페이지 스크롤 허용 --- */
+@media (max-width: 900px) {
+  .app { height: auto; min-height: 100dvh; overflow: visible; }
+  .workspace,
+  .workspace[data-page="python"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas: "stage" "data" "code";
+    overflow: visible;
+  }
+  .panel { max-height: none; }
+  .room { overflow: visible; }
+  .actionbar { flex-direction: column; }
+}
+@media (max-width: 760px) {
+  .controlbar { justify-content: center; }
+  .controlbar .topbar__spacer { display: none; }
+}
+@media (max-width: 600px) {
+  .topbar__title { flex: 1 1 100%; font-size: var(--fs-md); }
+  .modetabs { flex: 1 1 100%; }
+  .topbar__spacer { display: none; }
+  .topbar__tools { flex: 1 1 100%; justify-content: flex-end; }
+}
+
+/* --- 세로가 짧은 노트북(1366×768, 1280×720): 위아래 막대를 납작하게 --- */
+@media (min-width: 901px) and (max-height: 860px) {
+  .topbar { padding-top: var(--sp-1); padding-bottom: var(--sp-1); gap: var(--sp-1); }
+  .topbar__title small { display: none; }
+  .lesson { padding-top: var(--sp-1); padding-bottom: var(--sp-1); }
+  .lesson__goal { font-size: var(--fs-sm); }
+  .workspace { padding-top: var(--sp-2); padding-bottom: var(--sp-2); }
+}
+@media (min-width: 901px) and (max-height: 760px) {
+  .lesson__todo { font-size: var(--fs-xs); }
+  .controlbar { padding-top: 2px; padding-bottom: 2px; }
+  .actionbar { padding-top: var(--sp-1); }
+  .action-card__detail { display: none; }
+}

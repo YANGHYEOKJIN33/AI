@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>자료구조로 다시 보는 머신러닝 알고리즘</title>
+  <meta name="description" content="이미 배운 k-최근접 이웃·k-평균·선형회귀·의사결정트리를 의사코드 한 줄마다 바뀌는 자료구조와 데이터 이동으로 복습하는 고등학생용 학습 사이트">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+
+  <link rel="stylesheet" href="./src/styles/tokens.css">
+  <link rel="stylesheet" href="./src/styles/base.css">
+  <link rel="stylesheet" href="./src/styles/layout.css">
+  <link rel="stylesheet" href="./src/styles/components.css">
+  <link rel="stylesheet" href="./src/styles/viz.css">
+  <link rel="stylesheet" href="./src/styles/rooms.css">
+</head>
+<body class="view-room">
+  <div class="app">
+    <header class="topbar" id="topbar"></header>
+
+    <!-- 몇 번째 쪽인지 · 배울 것 · 해 볼 것 -->
+    <nav class="lesson" id="lessonbar" aria-label="학습 순서"></nav>
+
+    <!-- 실행 제어 — 알고리즘 쪽에서만 -->
+    <div class="controlbar" id="controlbar" role="group" aria-label="실행 제어"></div>
+
+    <!-- 지금 무슨 일이 일어났는지 + 예측 퀴즈 -->
+    <div class="actionbar" id="actionbar" aria-live="polite"></div>
+
+    <!-- 알고리즘 쪽: 코드 | 그림 / 자료구조 -->
+    <main class="workspace" id="workspace" data-page="review">
+      <section class="panel panel--code"  id="panel-code"  aria-label="코드"></section>
+      <section class="panel panel--stage" id="panel-stage" aria-label="그림"></section>
+      <section class="panel panel--data"  id="panel-data"  aria-label="자료구조"></section>
+    </main>
+
+    <!-- 📦 자료구조 도구 · ✅ 정리 쪽 -->
+    <main class="room" id="room" aria-label="활동"></main>
+
+    <footer class="sitefoot">
+      자료구조로 다시 보는 머신러닝 · <a href="https://yanghyeokjin33.github.io/8puzzle/">8-퍼즐 탐색 사이트</a>를 바탕으로 · 
+      <a href="https://github.com/YANGHYEOKJIN33/Fundamentals-of-AI/blob/main/PLAN.md">개발 계획서</a>
+    </footer>
+  </div>
+
+  <noscript>
+    <p style="padding:16px">이 사이트는 자바스크립트로 동작합니다. 브라우저에서 자바스크립트를 켜 주세요.</p>
+  </noscript>
+
+  <script type="module" src="./src/app/main.js"></script>
+</body>
+</html>
