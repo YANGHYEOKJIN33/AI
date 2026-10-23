@@ -1,0 +1,11 @@
+{
+  "name": "ml-datastructure-review",
+  "version": "1.0.0",
+  "private": true,
+  "description": "자료구조로 다시 보는 머신러닝 알고리즘 — k-NN·k-평균·선형회귀·의사결정트리 복습 사이트",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "python3 -m http.server 8000"
+  }
+}
