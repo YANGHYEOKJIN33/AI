@@ -8,7 +8,6 @@ import { createPlot } from '../plot.js';
 import { sbox, flowArrow, mark } from '../structures.js';
 import { fmt } from '../../core/math.js';
 import { PLAY_DAYS, PLAY_FEATURES, PLAY_VALUES, PLAY_LABELS } from '../../core/datasets.js';
-import { classify } from '../../core/algorithms/dtree.js';
 
 const byId = Object.fromEntries(PLAY_DAYS.map((r) => [r.id, r]));
 const LABEL = Object.fromEntries(PLAY_LABELS.map((l, i) => [l.id, { ...l, cat: i === 0 ? '2' : '1' }]));
@@ -18,8 +17,6 @@ const H = 250;
 const NODE_W = 82;
 const NODE_H = 36;
 
-/** ①쪽 써 보기 — 오늘 날씨 */
-const sample = { 날씨: '맑음', 기온: '쌀쌀', 습도: '높음', 바람: '강함' };
 
 function labelMark(label) { const l = LABEL[label]; return mark(l.shape, l.cat); }
 const countShort = (c) => `⚽${c['한다']} ✋${c['안 한다']}`;
@@ -67,38 +64,28 @@ export default {
   stageHint: '점선 상자 = 만드는 중 · 색 상자 = 잎(답)',
   targetName: (t) => TARGET_NAME[t] ?? t,
 
-  reviewInfo: {
-    one: '질문(특징)으로 데이터를 계속 나눠, 묶음이 한 레이블로 깨끗해지면 멈춰요. 가장 깨끗하게 나누는 질문을 불순도로 골라요.',
-    input: '표(특징 + 레이블)',
-    output: '질문 트리 → 새 데이터의 레이블',
-    phaseDs: ['레이블 세기(딕셔너리) → 잎?', 'rows ➜ groups (값별 리스트)', 'score 딕셔너리 → min', 'build(…) 재귀 = 스택 push/pop'],
-    tools: ['table', 'dict', 'group'],
-    remember: [
-      '불순도는 작을수록 깨끗해요 — 점수가 가장 "작은" 특징을 골라요(정보 이득으로 말하면 가장 큰 것).',
-      '끝까지 키우면 학습 데이터에만 딱 맞는 과대적합이 생길 수 있어, 최대 깊이에서 멈추기도 해요.',
-      '재귀 호출은 호출 스택에 쌓였다 빠져요 — 8-퍼즐에서 배운 스택이 여기서도 일해요.',
+  intro: {
+    question: '14일의 기록으로 "오늘 운동장에서 축구할까?"를 맞히는 질문 트리를 만들면?',
+    input: '표 14줄 (날씨 · 기온 · 습도 · 바람 → 한다 / 안 한다)',
+    output: '질문 트리 (질문 노드 + 잎 노드)',
+    tips: [
+      '지니 불순도 = 1 − (한다 비율)² − (안 한다 비율)². 모두 같으면 0, 반반이면 0.5.',
+      '점수 = 묶음 불순도를 묶음 크기로 가중 평균. 점수가 가장 작은 특징이 질문이 돼요.',
+      '가지는 값 순서(맑음 → 흐림 → 비)대로 끝까지 만든 뒤 다음 가지로 가요. 노드가 만들어지는 순서를 자주 물어요.',
     ],
   },
-
-  outcome(run) {
-    const { nodes, root, depth, leaves } = run.result;
-    const correct = PLAY_DAYS.filter((d) => classify(nodes, root, d).label === d.label).length;
-    return `뿌리 "${nodes[root].feature}" · 깊이 ${depth} · 잎 ${leaves}개 · 학습 데이터 ${correct}/${PLAY_DAYS.length} 맞힘`;
-  },
+  introBoxes: ['table'],
 
   createPlot() {
     return createPlot({ x: [0, W], y: [0, H], width: W, height: H, axes: false, flipY: false, ariaLabel: '의사결정트리', cls: 'plot--tree' });
   },
 
-  shapes(v, { page }) {
+  shapes(v) {
     const { ds } = v;
     const pos = layoutOf(v);
     const shapes = [];
     const nodes = Object.values(ds.nodes);
     const onPath = new Set();
-    if (page === 'review' && v.atEnd) {
-      for (const id of classify(ds.nodes, ds.root, sample).path) onPath.add(id);
-    }
     // 가지
     for (const nd of nodes) {
       if (nd.parent === null || !pos[nd.id] || !pos[nd.parent]) continue;
@@ -127,23 +114,7 @@ export default {
       el('span.legend__item', {}, el('span.mark', { style: 'color:var(--current)' }, '▢'), '지금 만드는 노드'));
   },
 
-  extra(v, { page, player }) {
-    if (page !== 'review') return null;
-    if (!v.atEnd) {
-      return el('div.tryit', {}, el('div.tryit__title', {}, '👆 써 보기'), el('div', {}, '⏩ 끝까지 트리를 만든 뒤, 오늘 날씨를 골라 예측해 보세요.'));
-    }
-    const res = classify(v.ds.nodes, v.ds.root, sample);
-    return el('div.tryit', {},
-      el('div.tryit__title', {}, '👆 써 보기 — 오늘 날씨를 고르면 트리에서 길이 켜져요'),
-      el('div.tryit__row', {}, PLAY_FEATURES.map((f) => el('label', {}, `${f} `,
-        el('select', {
-          'aria-label': f,
-          onchange: (e) => { sample[f] = e.target.value; player.goTo(player.view().index); },
-        }, PLAY_VALUES[f].map((val) => el('option', { value: val, selected: sample[f] === val }, val)))))),
-      el('div.tryit__row', {}, '→ 예측: ', el('strong.tryit__answer', { 'data-cat': LABEL[res.label].cat }, `${LABEL[res.label].icon} ${res.label}`)));
-  },
-
-  data(v) {
+  data(v, { boxes }) {
     const { ds, frame } = v;
     const hot = (t) => frame.effects.some((e) => e.target === t);
     const rowChip = (id) => {
@@ -159,16 +130,16 @@ export default {
     const stack = el('div.stackwrap', {},
       el('div.stack', {}, ds.stack.map((f, i) => el(`div.stack__frame${i === ds.stack.length - 1 ? '.is-top' : ''}`, {
         'data-flip': `sf-${f.nodeId}`, 'data-enter': 'up',
-      }, `build(${f.rows}행${f.edge ? `, ${f.edge}` : ''}, 깊이 ${f.depth})`))),
+      }, `트리만들기(${f.rows}행${f.edge ? ` · ${f.edge}` : ''}, 깊이 ${f.depth})`))),
       el('div.stack__label', {}, '▲ 맨 위 = 지금 실행 중 · 바닥 = 처음 호출'));
 
     // 지금 데이터 / 묶음
     const rowsBox = ds.groups
-      ? sbox({ target: 'groups', name: 'groups', kind: '딕셔너리', title: `"${ds.groups.feature}"의 값 → 행 리스트`, frame },
+      ? sbox({ target: 'groups', name: '묶음', kind: '딕셔너리', title: `"${ds.groups.feature}"의 값 → 행 리스트`, frame },
         el('div.bins', {}, ds.groups.bins.map((b) => el(`div.bin${ds.branch === b.value ? '.is-hot' : ''}${ds.branch && ds.branch !== b.value ? '.is-dim' : ''}`, {},
           el('div.bin__head', {}, `${b.value}`, el('span.bin__sub', {}, `${b.rows.length}개 · ${ds.criterion === 'entropy' ? 'H' : 'G'}=${fmt(b.imp, 3)}`)),
           el('div.bin__body', {}, b.rows.map(rowChip))))))
-      : sbox({ target: 'rows', name: 'rows', kind: '리스트', title: ds.cur ? '이 호출이 받은 데이터 행' : '데이터 행', frame,
+      : sbox({ target: 'rows', name: '데이터 행', kind: '리스트', title: ds.cur ? '이 호출이 받은 행' : '', frame,
         count: ds.rows.length, hint: ds.done ? '트리 완성 — 호출이 모두 끝났어요' : '', bodyCls: 'pool' }, ds.rows.map(rowChip));
 
     const counts = ds.labelCounts
@@ -181,15 +152,23 @@ export default {
       el('span.scorebar', {}, el('span.scorebar__fill', { style: `width:${Math.min(100, (s.score / (ds.criterion === 'entropy' ? 1 : 0.5)) * 100)}%` })),
       el('strong.kv__val', {}, fmt(s.score, 3))));
 
-    return el('div.flow.flow--tree', {},
-      sbox({ target: 'stack', name: 'call stack', kind: '스택', title: '호출 스택', frame, cls: 'sbox--stack' }, stack),
-      el('div.flow__col.flow__col--wide', {}, rowsBox),
-      flowArrow('세고 재기'),
-      el('div.flow__col', {},
-        sbox({ target: 'counts', name: 'counts', kind: '딕셔너리', title: '레이블 세기', frame, hint: '호출되면 먼저 레이블을 세요' }, counts),
-        sbox({ target: 'scores', name: 'score', kind: '딕셔너리', title: `특징 → 가중 ${ds.criterion === 'entropy' ? '엔트로피' : '지니'} (작을수록 좋음)`, frame,
-          hint: '특징을 시험할 때마다 한 줄씩' }, scoreRows),
-      ),
-    );
+    // 문제 보기 쪽 — 14일 기록 표
+    if (boxes.has('table')) {
+      return el('div.flow.flow--tree', {}, sbox({ target: 'table', name: '기록', kind: '표', title: '14일 (행 = 하루)', cls: 'sbox--table' },
+        el('table.dtable', {},
+          el('thead', {}, el('tr', {}, el('th', {}, '#'), PLAY_FEATURES.map((f) => el('th', {}, f)), el('th', {}, '축구'))),
+          el('tbody', {}, PLAY_DAYS.map((r) => el('tr', {},
+            el('td.num', {}, String(r.no)), PLAY_FEATURES.map((f) => el('td', {}, r[f])),
+            el('td', {}, labelMark(r.label), ` ${r.label}`)))))));
+    }
+    const parts = [];
+    if (boxes.has('stack')) parts.push(sbox({ target: 'stack', name: '호출 스택', kind: '스택', title: '맨 위 = 지금 실행 중', frame, cls: 'sbox--stack' }, stack));
+    if (boxes.has('groups')) parts.push(el('div.flow__col.flow__col--wide', {}, rowsBox));
+    const right = [];
+    if (boxes.has('counts')) right.push(sbox({ target: 'counts', name: '레이블 세기', kind: '딕셔너리', title: '지금 데이터', frame, hint: '호출되면 먼저 레이블을 세요' }, counts));
+    if (boxes.has('scores')) right.push(sbox({ target: 'scores', name: '점수표', kind: '딕셔너리', title: `특징 → 가중 ${ds.criterion === 'entropy' ? '엔트로피' : '지니'} (작을수록 좋음)`, frame,
+      hint: '특징을 시험할 때마다 한 줄씩' }, scoreRows));
+    if (right.length) { parts.push(flowArrow('세고 재기')); parts.push(el('div.flow__col', {}, right)); }
+    return el('div.flow.flow--tree', {}, parts);
   },
 };

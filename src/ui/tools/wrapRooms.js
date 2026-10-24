@@ -5,28 +5,28 @@ import { el, fill } from '../dom.js';
 import { ALGO_ICON } from '../topbar.js';
 import { ALGO_ORDER, getAlgorithm } from '../../core/algorithms/index.js';
 import { infoTerm } from '../infoTip.js';
-import { DATA_FLOW } from './mapRoom.js';
+import { DATA_FLOW } from './guideRoom.js';
 import { QUIZ } from '../../app/quiz.js';
 
 const SUMMARY = {
   knn: {
     ds: '표 · 리스트(튜플) · 딕셔너리',
-    core: 'neighbors = distances[:k]',
+    core: '이웃 ← 정렬된 distances의 앞에서 k개',
     care: 'k가 결과를 바꾼다 · 예측할 때마다 모든 데이터와 거리 계산',
   },
   kmeans: {
     ds: '리스트의 리스트(묶음) · 중심 리스트',
-    core: 'centroids = points[:k]',
+    core: '새 중심 ← 묶음의 평균 (같으면 멈춤)',
     care: '시작 중심에 따라 지역 최적 · k는 사람이 정함',
   },
   linreg: {
     ds: '리스트(열) · 변수 · 기록 리스트',
-    core: 'w = w - lr * dw',
+    core: 'w ← w − 학습률 × dw',
     care: '학습률이 크면 발산, 작으면 느림 · 손실 기록으로 확인',
   },
   dtree: {
     ds: '딕셔너리(세기·점수) · 묶음 리스트 · 호출 스택',
-    core: 'score[A] = weighted(groups, gini)',
+    core: 'best ← 가중 불순도가 가장 작은 특징',
     care: '불순도는 작을수록 좋음 · 너무 깊으면 과대적합',
   },
 };
@@ -45,7 +45,7 @@ export function createSummaryRoom({ store, onGlossary }) {
       el('div.matrixwrap', {},
         el('table.matrix.matrix--summary', {},
           el('thead', {}, el('tr', {},
-            ['알고리즘', '문제 · 학습', '핵심 자료구조', '데이터 이동', '🔑 핵심 한 줄', '⚠ 주의할 점'].map((h) => el('th', {}, h)))),
+            ['알고리즘', '문제 · 학습', '핵심 자료구조', '데이터 이동', '🔑 핵심 의사코드', '⚠ 주의할 점'].map((h) => el('th', {}, h)))),
           el('tbody', {}, ALGO_ORDER.map((id) => {
             const m = getAlgorithm(id).meta;
             const s = SUMMARY[id];
@@ -54,16 +54,16 @@ export function createSummaryRoom({ store, onGlossary }) {
               el('td', {}, `${m.task} · ${m.learning}`),
               el('td', {}, s.ds),
               el('td.matrix__flow', {}, DATA_FLOW[id]),
-              el('td', {}, el('code', {}, s.core)),
+              el('td', {}, s.core),
               el('td', {}, s.care));
           })))),
       el('h3.troom__subtitle', {}, '📌 오늘 다시 본 낱말 — 누르면 뜻이 나와요'),
       el('div.keywords', {}, KEYWORDS.map((t) => infoTerm(t, { strong: true }))),
       el('h3.troom__subtitle', {}, '👉 더 해 볼 것'),
       el('div.troom__controls', {},
-        el('button.pill.ctrl--primary', { type: 'button', onclick: () => store.set({ wrapStep: 1 }) }, '✅ 이해 확인 문제 풀기 →'),
+        el('button.pill.ctrl--primary', { type: 'button', onclick: () => store.set({ wrapStep: 1 }) }, '📝 종합 모의시험 →'),
         el('button.pill', { type: 'button', onclick: () => onGlossary() }, '📖 용어 사전'),
-        el('button.pill', { type: 'button', onclick: () => store.set({ mode: 'tools', toolsStep: 0 }) }, '📦 도구 복습 지도'),
+        el('button.pill', { type: 'button', onclick: () => store.set({ mode: 'tools', toolsStep: 0 }) }, '📦 도구 안내'),
         el('a.pill.pill--link', { href: 'https://yanghyeokjin33.github.io/8puzzle/' }, '🧩 8-퍼즐 탐색 사이트(스택·큐 복습)')),
     );
   }
@@ -89,7 +89,7 @@ export function createQuizRoom({ store }) {
     fill(root,
       el('div.troom__head', {},
         el('span.troom__icon', { 'aria-hidden': 'true' }, '✅'),
-        el('div.troom__titles', {}, el('h3.troom__title', {}, '이해 확인'),
+        el('div.troom__titles', {}, el('h3.troom__title', {}, '개념 확인'),
           el('p.troom__rule', {}, `푼 문제 ${answered} / ${questions.length} · 맞힌 개수 ${correct}`)),
         el('span.topbar__spacer'),
         el('button.pill', { type: 'button', onclick: () => { for (const k of Object.keys(chosen)) delete chosen[k]; render(); } }, '↺ 다시 풀기')),

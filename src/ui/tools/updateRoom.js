@@ -1,5 +1,5 @@
 /**
- * 7쪽 · 조금씩 고쳐 가기 — 갱신과 기록.
+ * 📦 7쪽 · 조금씩 고쳐 가기 — 갱신과 기록.
  *   손실 그릇 L(w) = (w − 3)² + 1 위의 공(w)을 "w ← w − 학습률 × 기울기"로 한 걸음씩 옮기고,
  *   그때마다 손실을 기록 리스트에 append 한다. 학습률이 너무 크면 골짜기를 넘어 튕겨 나간다(발산).
  */
@@ -7,7 +7,9 @@ import { el, fill } from '../dom.js';
 import { createPlot } from '../plot.js';
 import { createFlip } from '../flip.js';
 import { varCell } from '../structures.js';
-import { roomShell, btn, quizBox, algoLinks, codeLines } from './common.js';
+import { missionShell, btn, quizBox, codeLines, connectSection } from './common.js';
+import { createMission } from './mission.js';
+import { CONNECTIONS } from './connections.js';
 import { fmt } from '../../core/math.js';
 
 const L = (w) => (w - 3) ** 2 + 1;
@@ -19,9 +21,24 @@ const RATES = [
 ];
 const W0 = 0;
 
-export function createUpdateRoom({ store }) {
+const STEPS = [
+  { id: 'quiz', do: '🔮 먼저 맞혀 보기: 기울기가 −6이면 w는?', see: '"빼기 음수"는 더하기예요.' },
+  { id: 'lr01', do: '학습률 0.1로 🔁 "한 번 갱신"을 3번 누르세요.', see: '공이 바닥(w = 3) 쪽으로 내려가고, 기록 리스트의 손실이 줄어요.' },
+  { id: 'lr04', do: '학습률 0.4를 고르고 3번 누르세요.', see: '더 크게 움직여 더 빨리 바닥에 닿아요.' },
+  { id: 'lr105', do: '학습률 1.05를 고르고 3번 누르세요.', see: '바닥을 지나쳐 반대편으로 더 멀리 튕겨 나가요 — 발산!' },
+  { id: 'connect', do: '아래 카드에서 "그 장면 보러 가기"를 하나 누르세요.', see: '' },
+];
+const LEARNED = [
+  'w ← w − 학습률 × 기울기: 기울기의 반대쪽으로 조금씩 옮겨요.',
+  '고칠 때마다 손실을 기록 리스트에 붙여, 줄어드는지 확인해요.',
+  '학습률이 너무 크면 바닥을 지나쳐 발산해요.',
+];
+
+export function createUpdateRoom({ store, jump }) {
   const root = el('div');
   const flip = createFlip();
+  const mission = createMission('update', STEPS, store);
+  let peek = false;
   let lr = 0.1;
   let w = W0;
   let prevW = null;
@@ -47,6 +64,7 @@ export function createUpdateRoom({ store }) {
     w = w - lr * g;
     history = [...history, L(w)];
     line = 1;
+    if (history.length >= 3) mission.complete(lr === 0.1 ? 'lr01' : lr === 0.4 ? 'lr04' : 'lr105');
     const far = Math.abs(w - 3) > Math.abs(prevW - 3);
     msg = far
       ? { tone: 'warn', text: `w: ${fmt(prevW)} → ${fmt(w)} — 골짜기를 지나쳐 오히려 더 멀어졌어요! 학습률이 너무 커서 발산하는 중이에요.` }
@@ -54,6 +72,7 @@ export function createUpdateRoom({ store }) {
     render();
   }
   function reset() { w = W0; prevW = null; history = []; line = -1; msg = null; render(); }
+  function resetAll() { mission.reset(); qPick = null; lr = 0.1; reset(); }
   function setLr(v) { lr = v; reset(); }
 
   function render() {
@@ -73,14 +92,16 @@ export function createUpdateRoom({ store }) {
 
     const shown = history.slice(-10);
     const offset = history.length - shown.length;
-    fill(root, roomShell({
+    fill(root, missionShell({
       icon: '🔁', title: '조금씩 고쳐 가기 — 갱신과 기록',
-      rule: 'w ← w − 학습률 × 기울기. 기울기가 +면 w를 줄이고, −면 늘려요. 고칠 때마다 손실을 기록 리스트에 붙여 나아지는지 확인해요.',
+      mission: mission.view({ goal: 'w ← w − 학습률 × 기울기로 값을 고쳐 가며, 학습률에 따라 수렴·발산이 어떻게 달라지는지 설명할 수 있어요.', learned: LEARNED }),
       controls: [
         el('span.troom__label', {}, '학습률'),
-        RATES.map((r) => btn(r.name, () => setLr(r.lr), { pressed: lr === r.lr })),
-        btn('🔁 한 번 갱신', step, { primary: true, disabled: Math.abs(w) > 1e4 }),
-        btn('↺ 처음으로', reset),
+        RATES.map((r) => btn(r.name, () => setLr(r.lr), { pressed: lr === r.lr,
+          next: lr !== r.lr && ((r.lr === 0.4 && mission.isNext('lr04')) || (r.lr === 1.05 && mission.isNext('lr105'))) })),
+        btn('🔁 한 번 갱신', step, { primary: true, disabled: Math.abs(w) > 1e4,
+          next: (mission.isNext('lr01') && lr === 0.1) || (mission.isNext('lr04') && lr === 0.4) || (mission.isNext('lr105') && lr === 1.05) }),
+        btn('↺ 처음으로', resetAll),
       ],
       body: el('div.tflow', {},
         el('div.tflow__col', {}, el('div.tflow__cap', {}, '⛰ 손실 그릇 위의 공'), el('div.tplot', {}, plot.svg)),
@@ -97,10 +118,10 @@ export function createUpdateRoom({ store }) {
             el('div.calc__rows', {},
               el('div.calc__row', {}, `기울기 = 2 × (w − 3) = 2 × (${fmt(w)} − 3) = ${fmt(g)}`),
               el('div.calc__row', {}, `다음 w = ${fmt(w)} − ${lr} × (${fmt(g)}) = ${fmt(w - lr * g)}`))),
-          codeLines(['grad = 2 * (w - 3)', 'w = w - lr * grad', 'history.append(loss(w))'], line === 1 ? 2 : -1)),
+          codeLines(['기울기 ← 2 × (w − 3)', 'w ← w − 학습률 × 기울기', '손실 기록에 손실을 추가한다'], line === 1 ? 1 : -1)),
         el('div.tflow__arrow', {}, '➜'),
         el('div.tflow__col', {},
-          el('div.tflow__cap', {}, `📝 history — ${history.length}칸`),
+          el('div.tflow__cap', {}, `📝 손실 기록 — ${history.length}칸`),
           el('div.sbox', {}, el('div.sbox__body.pool', {}, history.length === 0
             ? el('div.sbox__empty', {}, '갱신할 때마다 손실이 한 칸씩 붙어요')
             : [offset > 0 ? el('span.sbox__empty', {}, `…앞의 ${offset}개`) : null,
@@ -113,8 +134,8 @@ export function createUpdateRoom({ store }) {
             ? (history.at(-1) < history.at(-2) ? '📉 기록이 줄어들고 있어요 — 학습이 잘 되는 중!' : '📈 기록이 커지고 있어요 — 학습률을 줄여 보세요.')
             : '💡 선형회귀에서는 w와 b 두 개를 동시에 이렇게 고쳐요.'))),
       message: msg,
-      quiz: quizBox(quiz, qPick, (i) => { qPick = i; render(); }),
-      links: algoLinks(store, [['linreg', 'w·b 갱신 + history.append'], ['kmeans', '중심을 평균으로 갱신, 바뀌지 않으면 수렴']]),
+      quiz: quizBox(quiz, qPick, (i) => { qPick = i; mission.complete('quiz'); render(); }, { next: mission.isNext('quiz') }),
+      connect: connectSection({ mission, cards: CONNECTIONS.update, jump, peek, onPeek: () => { peek = true; render(); } }),
     }));
     flip(root);
   }

@@ -1,100 +1,113 @@
 /**
- * 2쪽 · 표 = 리스트의 리스트.
- *   파이썬 코드(data = [[…], …])  ➜  표(행 = 샘플, 열 = 특징·레이블)  ➜  산점도(행 하나 = 점 하나)
- * append로 한 줄을 붙이면 세 곳에 동시에 나타나고, 행·칸을 누르면 data[i]·data[i][j]를 보여 준다.
+ * 📦 2쪽 · 표 = 리스트의 리스트.
+ *   리스트로 쓴 모습  ➜  표(행 = 샘플, 열 = 특징·레이블)  ➜  산점도(행 하나 = 점 하나)
  */
 import { el, fill } from '../dom.js';
 import { createPlot } from '../plot.js';
 import { createFlip } from '../flip.js';
 import { mark } from '../structures.js';
-import { roomShell, btn, quizBox, algoLinks } from './common.js';
+import { missionShell, btn, quizBox, connectSection } from './common.js';
+import { createMission } from './mission.js';
+import { CONNECTIONS } from './connections.js';
 import { FOODS, FOOD_LABELS, FOOD_AXES } from '../../core/datasets.js';
 
 const LABEL = Object.fromEntries(FOOD_LABELS.map((l, i) => [l.id, { ...l, cat: String(i + 1) }]));
-const START = 5;
+const START = 4;
 const COLS = ['이름', '단맛', '아삭함', '레이블'];
-const ROLE = ['이름표', '특징 x₁', '특징 x₂', '레이블 y'];
-const py = (r) => `['${r.name}', ${r.x}, ${r.y}, '${r.label}']`;
+const ROLE = ['이름표', '특징 ①', '특징 ②', '레이블(정답)'];
+const asList = (r) => `['${r.name}', ${r.x}, ${r.y}, '${r.label}']`;
 
-export function createTableRoom({ store }) {
+const STEPS = [
+  { id: 'append', do: '➕ "한 줄 추가"를 누르세요.', see: '표 맨 아래, 리스트 맨 뒤, 그림에 같은 데이터가 동시에 생겨요.' },
+  { id: 'row', do: '표 왼쪽의 번호(0, 1, 2 …) 하나를 누르세요.', see: 'data[i] = i번 줄 전체 = 음식 하나(샘플).' },
+  { id: 'cell', do: '표의 칸 하나를 누르세요.', see: 'data[i][j] = i번 줄의 j번 칸. 번호는 0부터 세요.' },
+  { id: 'quiz', do: '🔮 맞혀 보기 문제를 푸세요.', see: '줄 번호 먼저, 칸 번호 나중.' },
+  { id: 'connect', do: '아래 카드에서 "그 장면 보러 가기"를 하나 누르세요.', see: '알고리즘이 이 표를 한 줄씩 꺼내 쓰는 장면이에요.' },
+];
+const LEARNED = [
+  '표의 한 줄 = 샘플(데이터) 하나, 한 칸 = 특징 또는 레이블.',
+  'data[i]는 줄, data[i][j]는 칸 — 번호는 0부터.',
+  '네 알고리즘 모두 이 표에서 출발해 한 줄씩 꺼내 써요.',
+];
+
+export function createTableRoom({ store, jump }) {
   const root = el('div');
   const flip = createFlip();
+  const mission = createMission('table', STEPS, store);
   let n = START;
-  let sel = null;   // { i, j }
+  let sel = null;
   let justAdded = null;
   let msg = null;
   let picked = null;
+  let peek = false;
   const plot = createPlot({
     x: [FOOD_AXES.min, FOOD_AXES.max], y: [FOOD_AXES.min, FOOD_AXES.max], width: 300, height: 280,
-    xLabel: `${FOOD_AXES.x} (data[i][1]) →`, yLabel: `${FOOD_AXES.y} (data[i][2]) →`, ariaLabel: '표의 행을 점으로 찍은 산점도',
+    xLabel: `${FOOD_AXES.x} →`, yLabel: `${FOOD_AXES.y} →`, ariaLabel: '표의 행을 점으로 찍은 산점도',
   });
-
-  const rows = () => FOODS.slice(0, n);
-  const quiz = { q: 'data[2][1]의 값은? (파이썬은 0부터 세요)', options: ['10', '8', '1', '6'], answer: 1,
-    why: 'data[2]는 세 번째 줄 [\'포도\', 8, 6, \'과일\'], 그중 [1]은 두 번째 칸 = 단맛 8이에요.' };
+  const quiz = { q: `data[2][1]의 값은? (0번 줄부터 세요)`, options: [String(FOODS[2].x), String(FOODS[1].x), String(FOODS[2].y), FOODS[2].name], answer: 0,
+    why: `data[2] = ${asList(FOODS[2])} (세 번째 줄), 그중 [1]은 두 번째 칸 = 단맛 ${FOODS[2].x}.` };
 
   function append() {
-    if (n >= FOODS.length) { msg = { tone: 'warn', text: '준비한 음식 12개를 모두 넣었어요.' }; render(); return; }
+    if (n >= FOODS.length) return;
     n += 1;
     justAdded = n - 1;
-    const r = FOODS[n - 1];
-    msg = { tone: 'ok', text: `data.append(${py(r)}) — 표 맨 아래에 ${n - 1}번 줄이 생기고, 그림에 점 하나가 찍혔어요. 이제 len(data) = ${n}.` };
+    mission.complete('append');
+    msg = { tone: 'ok', text: `data에 ${asList(FOODS[n - 1])}를 추가했어요 → ${n - 1}번 줄. 이제 줄이 ${n}개.` };
     render();
   }
-  function reset() { n = START; sel = null; justAdded = null; msg = null; render(); }
   function choose(i, j = null) {
     sel = { i, j };
     const r = FOODS[i];
     const vals = [r.name, r.x, r.y, r.label];
-    msg = j === null
-      ? { tone: 'info', text: `data[${i}] = ${py(r)} — ${i}번 줄 전체(샘플 하나)예요.` }
-      : { tone: 'info', text: `data[${i}][${j}] = ${typeof vals[j] === 'string' ? `'${vals[j]}'` : vals[j]} — ${i}번 줄의 ${j}번 칸(${COLS[j]}, ${ROLE[j]})이에요.` };
+    if (j === null) {
+      mission.complete('row');
+      msg = { tone: 'info', text: `data[${i}] = ${asList(r)} — ${i}번 줄 전체, 음식 하나(샘플)예요.` };
+    } else {
+      mission.complete('cell');
+      msg = { tone: 'info', text: `data[${i}][${j}] = ${typeof vals[j] === 'string' ? `'${vals[j]}'` : vals[j]} — ${i}번 줄의 ${j}번 칸(${COLS[j]}, ${ROLE[j]}).` };
+    }
     render();
   }
+  function reset() { n = START; sel = null; justAdded = null; msg = null; picked = null; mission.reset(); render(); }
 
   function render() {
-    const list = rows();
+    const list = FOODS.slice(0, n);
     plot.update(list.map((r, i) => ({
       key: r.id, kind: 'point', x: r.x, y: r.y, shape: LABEL[r.label].shape, size: sel?.i === i ? 8 : 6,
       cls: `cat-${LABEL[r.label].cat}${sel?.i === i ? ' is-cur' : ''}`, label: r.name,
     })));
-
-    const code = el('pre.troom__code', {},
+    const asCode = el('pre.troom__code', {},
       el('code.troom__codeline', {}, 'data = ['),
       list.map((r, i) => el(`code.troom__codeline${sel?.i === i ? '.is-on' : ''}${justAdded === i ? '.is-new' : ''}`, {
-        'data-flip': `code-${r.id}`, 'data-enter': 'up', onclick: () => choose(i),
-      }, `    ${py(r)},   # ${i}`)),
+        'data-flip': `code-${r.id}`, 'data-enter': 'up',
+      }, `  ${asList(r)},   ← ${i}번`)),
       el('code.troom__codeline', {}, ']'));
-
     const table = el('table.dtable.dtable--big', {},
       el('thead', {},
-        el('tr', {}, el('th', {}, 'i'), COLS.map((c, j) => el('th', {}, `[${j}] ${c}`))),
+        el('tr', {}, el('th', {}, '번호'), COLS.map((c, j) => el('th', {}, `[${j}] ${c}`))),
         el('tr.dtable__roles', {}, el('th', {}, ''), ROLE.map((c) => el('th', {}, c)))),
-      el('tbody', {}, list.map((r, i) => el(`tr${sel?.i === i ? '.is-cur' : ''}${justAdded === i ? '.is-new' : ''}`, {
-        'data-flip': `row-${r.id}`, 'data-enter': 'up',
-      },
-      el('td.num', {}, el('button.linkbtn', { type: 'button', onclick: () => choose(i), title: `data[${i}] 보기` }, String(i))),
-      [r.name, r.x, r.y, r.label].map((val, j) => el(`td${typeof val === 'number' ? '.num' : ''}${sel?.i === i && sel?.j === j ? '.is-hot' : ''}`, {
-        onclick: () => choose(i, j), title: `data[${i}][${j}]`, style: 'cursor:pointer',
-      }, j === 3 ? [mark(LABEL[val].shape, LABEL[val].cat), ` ${val}`] : String(val)))))));
+      el('tbody', {}, list.map((r, i) => el(`tr${sel?.i === i ? '.is-cur' : ''}${justAdded === i ? '.is-new' : ''}`, { 'data-flip': `row-${r.id}`, 'data-enter': 'up' },
+        el('td.num', {}, el(`button.rowbtn${mission.isNext('row') ? '.is-next' : ''}`, { type: 'button', onclick: () => choose(i), title: `data[${i}] 보기` }, String(i))),
+        [r.name, r.x, r.y, r.label].map((val, j) => el(`td.cellbtn${typeof val === 'number' ? '.num' : ''}${sel?.i === i && sel?.j === j ? '.is-hot' : ''}${mission.isNext('cell') ? '.is-next-cell' : ''}`, {
+          onclick: () => choose(i, j), title: `data[${i}][${j}]`,
+        }, j === 3 ? [mark(LABEL[val].shape, LABEL[val].cat), ` ${val}`] : String(val)))))));
 
-    fill(root, roomShell({
+    fill(root, missionShell({
       icon: '📋', title: '표 = 리스트의 리스트',
-      rule: '행(줄) 하나 = 샘플 하나, 열(칸) = 특징 또는 레이블. data[i]는 i번 줄, data[i][j]는 i번 줄의 j번 칸이에요.',
+      mission: mission.view({ goal: '데이터 표에서 줄(샘플)과 칸(특징·레이블)을 data[i][j]로 짚을 수 있어요.', learned: LEARNED }),
       controls: [
-        btn(`➕ data.append(…)  (${n}/${FOODS.length})`, append, { primary: true, disabled: n >= FOODS.length }),
+        btn(`➕ 한 줄 추가 (${n}/${FOODS.length})`, append, { primary: true, disabled: n >= FOODS.length, next: mission.isNext('append') }),
         btn('↺ 처음으로', reset),
-        el('span.troom__hint', {}, '표의 번호·칸이나 코드 줄을 눌러 보세요'),
       ],
       body: el('div.tflow', {},
-        el('div.tflow__col', {}, el('div.tflow__cap', {}, '🐍 파이썬 코드'), code),
-        el('div.tflow__arrow', {}, '➜'),
-        el('div.tflow__col.tflow__col--grow', {}, el('div.tflow__cap', {}, `📋 표로 보면 — len(data) = ${n}`), table),
-        el('div.tflow__arrow', {}, '➜'),
-        el('div.tflow__col', {}, el('div.tflow__cap', {}, '📈 그림으로 보면 — 행 하나 = 점 하나'), el('div.tplot', {}, plot.svg))),
+        el('div.tflow__col.tflow__col--grow', {}, el('div.tflow__cap', {}, `📋 표 — 줄 ${n}개`), table),
+        el('div.tflow__arrow', {}, '='),
+        el('div.tflow__col', {}, el('div.tflow__cap', {}, '📝 리스트로 쓰면 (리스트 안에 리스트)'), asCode),
+        el('div.tflow__arrow', {}, '='),
+        el('div.tflow__col', {}, el('div.tflow__cap', {}, '📈 그림으로 보면 (줄 하나 = 점 하나)'), el('div.tplot', {}, plot.svg))),
       message: msg,
-      quiz: quizBox(quiz, picked, (i) => { picked = i; choose(2, 1); }),
-      links: algoLinks(store, [['knn', '학습 데이터 train'], ['kmeans', '집 위치 points'], ['linreg', 'X, Y 열'], ['dtree', '14일 기록 rows']]),
+      quiz: mission.has('cell') || mission.has('quiz') ? quizBox(quiz, picked, (i) => { picked = i; mission.complete('quiz'); choose(2, 1); }, { next: mission.isNext('quiz') }) : null,
+      connect: connectSection({ mission, cards: CONNECTIONS.table, jump, peek, onPeek: () => { peek = true; render(); } }),
     }));
     flip(root);
     justAdded = null;

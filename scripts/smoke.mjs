@@ -1,5 +1,5 @@
 /**
- * (선택) 브라우저 점검 — 모든 쪽을 열고, 알고리즘 쪽은 모든 "핵심 한 줄" 설정으로 처음부터 끝까지 밟아
+ * (선택) 브라우저 점검 — 모든 쪽을 열고, 알고리즘 쪽은 모든 조건 조합으로 처음부터 끝까지 밟아
  * 콘솔 오류가 없는지 확인한다. 정적 서버를 스스로 띄우므로 따로 켤 필요가 없다.
  *
  *   npm i -D playwright && npx playwright install chromium   # 처음 한 번
@@ -44,25 +44,33 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 844 
 
   const set = (patch) => page.evaluate((p) => globalThis.__mlds.store.set(p), patch);
   for (let i = 0; i < 7; i += 1) { await set({ mode: 'tools', toolsStep: i }); visited += 1; }
-  for (let i = 0; i < 2; i += 1) { await set({ mode: 'wrap', wrapStep: i }); visited += 1; }
+  for (let i = 0; i < 3; i += 1) { await set({ mode: 'wrap', wrapStep: i }); visited += 1; }
 
-  const swaps = await page.evaluate(async () => {
+  // 알고리즘마다 모든 조건(knob 조합) × 모든 쪽을 열고, 단계 쪽은 처음부터 끝까지 밟는다
+  const plan = await page.evaluate(async () => {
     const { ALGORITHMS, ALGO_ORDER } = await import('./src/core/algorithms/index.js');
-    return ALGO_ORDER.map((id) => [id, ALGORITHMS[id].swap.options.map((o) => o.params)]);
+    const { algoPages } = await import('./src/app/lesson.js');
+    return ALGO_ORDER.map((id) => {
+      let combos = [{}];
+      for (const k of ALGORITHMS[id].knobs) combos = combos.flatMap((c) => k.options.map((o) => ({ ...c, ...o.patch })));
+      return [id, combos, algoPages(id).length];
+    });
   });
-  for (const [algoTab, options] of swaps) {
-    for (const params of options) {
-      for (const algoStep of [0, 1, 2]) {
+  for (const [algoTab, combos, pages] of plan) {
+    for (const params of combos) {
+      for (let algoStep = 0; algoStep < pages; algoStep += 1) {
         await page.evaluate(({ algoTab, algoStep, params }) => {
           const { store } = globalThis.__mlds;
-          store.set({ mode: 'algo', algoTab, algoStep });
           store.setParams(algoTab, params);
+          store.set({ mode: 'algo', algoTab, algoStep });
         }, { algoTab, algoStep, params });
-        const total = await page.evaluate(() => globalThis.__mlds.player.view().total);
-        for (let k = 0; k < total; k += Math.max(1, Math.floor(total / 25))) {
-          await page.evaluate((i) => globalThis.__mlds.player.goTo(i), k);
-        }
-        await page.evaluate(() => globalThis.__mlds.player.toEnd());
+        await page.evaluate(() => {
+          const { player } = globalThis.__mlds;
+          const v = player.view();
+          if (v.empty) return;
+          for (let i = v.lo; i <= v.hi; i += Math.max(1, Math.floor((v.hi - v.lo) / 20))) player.goTo(i);
+          player.toEnd();
+        });
         visited += 1;
       }
     }

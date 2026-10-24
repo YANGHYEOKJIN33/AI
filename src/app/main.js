@@ -3,7 +3,8 @@
  */
 import { createStore } from './state.js';
 import { createPlayer } from './player.js';
-import { currentStep } from './lesson.js';
+import { currentStep, algoPages, pageWindow } from './lesson.js';
+import { normalizeParams } from '../core/algorithms/index.js';
 import { qs } from '../ui/dom.js';
 import { mountTopbar } from '../ui/topbar.js';
 import { mountLessonBar } from '../ui/lessonBar.js';
@@ -29,6 +30,25 @@ const glossary = createGlossaryPanel();
 const onboarding = createOnboarding();
 const coach = createCoach(store, player);
 
+/**
+ * 알고리즘의 한 장면으로 바로 간다 — 연습 문제의 "그 장면 보기", 도구 쪽의 "그 장면 보러 가기".
+ * params를 주면 그 조건으로 다시 돌린 뒤 간다.
+ */
+function jump(algoId, pageId, frame = null, params = null) {
+  if (params) store.setParams(algoId, normalizeParams(algoId, params));
+  const pages = algoPages(algoId);
+  const algoStep = Math.max(0, pages.findIndex((p) => p.id === pageId));
+  store.set({ mode: 'algo', algoTab: algoId, algoStep });
+  // frame: 장면 번호, 또는 동작 이름(그 쪽에서 그 동작이 처음 나오는 장면)
+  if (typeof frame === 'string') {
+    const v = player.view();
+    const i = v.frames.findIndex((f, k) => k >= v.lo && k <= v.hi && f.action === frame);
+    if (i >= 0) player.goTo(i);
+  } else if (frame !== null && frame >= 0) {
+    player.goTo(frame);
+  }
+}
+
 mountTopbar(qs('#topbar'), store, { onHelp: onboarding.open, onGlossary: glossary.open });
 mountLessonBar(qs('#lessonbar'), store);
 mountControls(qs('#controlbar'), store, player);
@@ -36,32 +56,30 @@ mountActionCard(qs('#actionbar'), store, player, coach);
 mountCodePanel(qs('#panel-code'), store, player, VIEWS);
 mountStagePanel(qs('#panel-stage'), store, player, VIEWS);
 mountDataPanel(qs('#panel-data'), store, player, VIEWS);
-mountRoom(qs('#room'), store, { onGlossary: glossary.open });
+mountRoom(qs('#room'), store, { onGlossary: glossary.open, jump, player });
 
-// 어느 화면인가 — 방(도구·정리) / 3분할 작업대(알고리즘)
-let lastPage = '';
+// 알고리즘·조건이 바뀌면 다시 돌리고, 쪽이 바뀌면 그 쪽의 장면 범위만 오가게 한다.
+let lastRunKey = '';
+let lastPageKey = '';
 store.subscribe((state) => {
-  const workspace = state.mode === 'algo';
+  const page = currentStep(state);
+  const kind = state.mode === 'algo' ? page.kind : 'room';
+  const workspace = kind === 'intro' || kind === 'step';
   document.body.classList.toggle('view-workspace', workspace);
   document.body.classList.toggle('view-room', !workspace);
-  if (!workspace) { player.pause(); return; }
-  const page = currentStep(state)?.id ?? 'review';
-  qs('#workspace').dataset.page = page;
-  const sig = `${state.algoTab}|${page}`;
-  if (sig !== lastPage) {
-    lastPage = sig;
-    player.pause();
-  }
-});
+  document.body.classList.toggle('show-controls', kind === 'step');
+  qs('#workspace').dataset.page = page.id;
+  qs('#workspace').dataset.kind = kind;
+  if (state.mode !== 'algo') { player.pause(); lastPageKey = ''; return; }
 
-// 알고리즘이나 "핵심 한 줄" 설정이 바뀌면 다시 돌려 싣는다. 쪽만 바뀌면 진행 위치를 지킨다.
-let lastRunKey = '';
-store.subscribe((state) => {
-  if (state.mode !== 'algo') return;
-  const key = `${state.algoTab}|${JSON.stringify(state.params[state.algoTab])}`;
-  if (key !== lastRunKey) {
-    lastRunKey = key;
-    player.load(state.algoTab);
+  const runKey = `${state.algoTab}|${JSON.stringify(state.params[state.algoTab])}`;
+  const reloaded = runKey !== lastRunKey;
+  if (reloaded) { lastRunKey = runKey; player.load(state.algoTab); }
+  const pageKey = `${runKey}|${page.id}`;
+  if (pageKey !== lastPageKey) {
+    lastPageKey = pageKey;
+    const [lo, hi] = pageWindow(page, player.frames());
+    player.setWindow(lo, hi);
   }
 });
 
@@ -76,4 +94,4 @@ store.subscribe((state) => {
 onboarding.maybeShow();
 
 // 개발 중 확인용
-globalThis.__mlds = { store, player };
+globalThis.__mlds = { store, player, jump };

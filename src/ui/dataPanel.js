@@ -7,7 +7,7 @@ import { createFlip } from './flip.js';
 import { currentStep } from '../app/lesson.js';
 
 export function mountDataPanel(root, store, player, views) {
-  const hint = el('span.panel__hint', {}, '의사코드 한 줄이 바꾼 상자가 빛나요 · 데이터는 상자 사이를 이동해요');
+  const hint = el('span.panel__hint', {}, '방금 바뀐 상자가 파랗게 빛나요');
   const body = el('div.panel__body.dataflow');
   fill(root,
     el('div.panel__head', {}, el('span.panel__title', {}, '자료구조'), hint),
@@ -21,11 +21,14 @@ export function mountDataPanel(root, store, player, views) {
     if (state.mode !== 'algo') return;
     const v = player.view();
     if (v.empty) return;
-    const page = currentStep(state)?.id;
-    const sig = `${v.algoId}|${v.loadSeq}|${page}`;
+    const step = currentStep(state);
+    const view = views[v.algoId];
+    const sig = `${v.algoId}|${v.loadSeq}|${step.id}`;
     const reset = sig !== lastSig;
     lastSig = sig;
-    fill(body, views[v.algoId].data(v, { store, player, state, page }));
+    // 이 쪽에 필요한 상자만 — 문제 보기 쪽은 입력 데이터 하나만
+    const boxes = step.kind === 'intro' ? view.introBoxes : step.boxes;
+    fill(body, view.data(v, { store, player, state, page: step.id, kind: step.kind, boxes: new Set(boxes) }));
     flip(body, { reset });
   }
 

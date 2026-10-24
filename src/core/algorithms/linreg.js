@@ -40,19 +40,6 @@ export function pseudo(params = defaults) {
   ];
 }
 
-export function python(params = defaults) {
-  return [
-    'w, b = 0, 0',
-    `for epoch in range(${EPOCHS}):`,
-    '    pred = [w * x + b for x in X]',
-    '    err = [p - y for p, y in zip(pred, Y)]',
-    '    loss = sum(e * e for e in err) / n',
-    '    dw = 2 * sum(e * x for e, x in zip(err, X)) / n; db = 2 * sum(err) / n',
-    `    w = w - ${params.lr} * dw; b = b - ${params.lr} * db`,
-    '    history.append(loss)',
-    'return w, b',
-  ];
-}
 
 export const notes = [
   '기울기 w와 절편 b를 0으로 두고 시작해요. 처음 직선은 바닥에 누운 y = 0이에요.',
@@ -66,20 +53,15 @@ export const notes = [
   '반복이 끝나면 마지막 w, b가 학습된 직선이에요.',
 ];
 
-export const coreLine = 6;
-export const coreWhy = '학습률이 작으면 천천히, 알맞으면 빠르게 내려가고, 너무 크면 골짜기를 넘어 튕겨 나가요(발산).';
-export const swap = Object.freeze({
-  label: '학습률 lr',
-  options: [
-    { id: 'lr0.01', text: 'w = w - 0.01 * dw   # 작은 학습률',  params: { lr: 0.01 } },
-    { id: 'lr0.05', text: 'w = w - 0.05 * dw   # 알맞은 학습률', params: { lr: 0.05 } },
-    { id: 'lr0.1',  text: 'w = w - 0.1 * dw    # 너무 큰 학습률', params: { lr: 0.1 } },
-  ],
-});
-export function swapIdOf(params) { return `lr${params.lr}`; }
+const LRS = [0.01, 0.05, 0.1];
+export const knobs = [
+  { key: 'lr', label: '학습률', options: LRS.map((lr) => ({ id: String(lr), label: `학습률 ${lr}${lr === 0.05 ? ' (기본)' : lr === 0.1 ? ' (너무 큼)' : ' (작음)'}`, patch: { lr } })) },
+];
+export function knobValue(params) { return String(params.lr); }
+export function normalize(params) { return { lr: LRS.includes(params?.lr) ? params.lr : defaults.lr }; }
 
 export function run(params = defaults) {
-  const lr = params.lr ?? defaults.lr;
+  const { lr } = normalize(params);
   const { X, Y } = STUDY;
   const n = X.length;
   const rec = new Recorder();

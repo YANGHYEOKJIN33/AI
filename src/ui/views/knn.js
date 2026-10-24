@@ -8,7 +8,7 @@ import { el } from '../dom.js';
 import { createPlot } from '../plot.js';
 import { sbox, flowArrow, chip, mark } from '../structures.js';
 import { fmt } from '../../core/math.js';
-import { FOOD_LABELS, FOOD_AXES, FOOD_QUERY } from '../../core/datasets.js';
+import { FOOD_LABELS, FOOD_AXES } from '../../core/datasets.js';
 
 const LABEL = Object.fromEntries(FOOD_LABELS.map((l, i) => [l.id, { ...l, cat: String(i + 1) }]));
 const TARGET_NAME = { distances: 'distances', neighbors: 'neighbors', votes: 'votes', result: '결과' };
@@ -20,39 +20,26 @@ function labelMark(label) {
 
 export default {
   stageTitle: '산점도 — 단맛 × 아삭함',
-  stageHint: '★ 질문점(토마토)과 학습 데이터',
+  stageHint: '★ 질문점과 학습 데이터',
   targetName: (t) => TARGET_NAME[t] ?? t,
 
-  reviewInfo: {
-    one: '새 데이터와 가장 가까운 학습 데이터 k개가 투표해서 레이블을 정해요. "가까운 것끼리는 닮았다"는 생각이에요.',
-    input: '학습 데이터(특징 + 레이블), 새 데이터 q, k',
-    output: 'q의 레이블(예측)',
-    phaseDs: ['표 ➜ distances (append)', 'distances.sort()', 'distances[:k] ➜ neighbors', 'neighbors ➜ votes ➜ max'],
-    tools: ['table', 'distance', 'sort', 'dict'],
-    remember: [
-      '따로 학습하지 않아요 — 예측할 때마다 모든 학습 데이터와 거리를 재요(데이터가 많으면 느려요).',
-      'k가 너무 작으면 바로 옆 한 개에 휘둘리고, 너무 크면 먼 데이터까지 투표에 끼어들어요.',
-      '특징의 단위가 다르면(cm와 kg) 거리가 한쪽으로 치우치니 크기를 맞춰 줘요(정규화).',
+  intro: {
+    question: '새 음식 토마토(단맛 6, 아삭함 4)는 과일·채소·단백질 중 무엇과 닮았을까?',
+    input: '학습 데이터 9개(단맛, 아삭함 → 레이블), 질문점, k',
+    output: '질문점의 레이블(예측)',
+    tips: [
+      '거리는 d² = Δx² + Δy²로 비교해도 순서가 같아요 (√를 안 해도 돼요).',
+      'distances에는 표 순서대로 추가되고, 정렬한 뒤에야 가까운 순서가 돼요.',
+      '이웃 = 정렬된 distances의 0번부터 k−1번까지. 투표는 딕셔너리 {레이블: 표 수}.',
     ],
   },
+  introBoxes: ['train'],
 
-  outcome(run) {
-    const votes = run.result.votes.map((v) => `${v.label} ${v.count}`).join(', ');
-    return `${run.result.label} (${votes})`;
-  },
-
-  createPlot({ store }) {
+  createPlot() {
     return createPlot({
       x: [FOOD_AXES.min, FOOD_AXES.max], y: [FOOD_AXES.min, FOOD_AXES.max],
       width: 320, height: 296, xLabel: `${FOOD_AXES.x} →`, yLabel: `${FOOD_AXES.y} →`,
       ariaLabel: '음식의 단맛과 아삭함 산점도',
-      onClick: (x, y) => {
-        const s = store.get();
-        if (s.mode !== 'algo' || s.algoStep !== 0) return;   // ①쪽에서만 질문점을 옮긴다
-        const qx = Math.max(1, Math.min(10, Math.round(x)));
-        const qy = Math.max(1, Math.min(10, Math.round(y)));
-        store.setParams('knn', { query: { x: qx, y: qy } });
-      },
     });
   },
 
@@ -90,7 +77,7 @@ export default {
     }
     const resultCat = ds.result ? `cat-${LABEL[ds.result].cat}` : '';
     shapes.push({ key: 'q', kind: 'point', x: q.x, y: q.y, shape: 'star', size: 8.5, cls: `query ${resultCat}`,
-      label: ds.result ? `${FOOD_QUERY.name} = ${ds.result}` : `${FOOD_QUERY.name}?`, title: `질문점 (${q.x}, ${q.y})` });
+      label: ds.result ? `${q.name} = ${ds.result}` : `${q.name}?`, title: `질문점 (${q.x}, ${q.y})` });
     return shapes;
   },
 
@@ -101,30 +88,18 @@ export default {
       el('span.legend__item', {}, el('span.mark.mark--ring', {}, '◯'), '이웃 원'));
   },
 
-  extra(v, { page, store }) {
-    if (page !== 'review') return null;
-    const q = v.params.query;
-    const moved = q.x !== FOOD_QUERY.x || q.y !== FOOD_QUERY.y;
-    return el('div.tryit', {},
-      el('div.tryit__title', {}, '👆 써 보기 — 그림을 눌러 질문점을 옮겨 보세요'),
-      el('div.tryit__row', {},
-        el('span', {}, `q = (${q.x}, ${q.y}), k = ${v.params.k}  →  `),
-        el('strong', { 'data-cat': LABEL[v.result.label].cat, class: 'tryit__answer' }, `${v.result.label}`)),
-      moved ? el('button.pill', { type: 'button', onclick: () => store.setParams('knn', { query: { x: FOOD_QUERY.x, y: FOOD_QUERY.y } }) },
-        `↺ ${FOOD_QUERY.name}(${FOOD_QUERY.x}, ${FOOD_QUERY.y})로 되돌리기`) : null,
-    );
-  },
-
-  data(v) {
+  data(v, { boxes }) {
     const { ds, data, frame } = v;
     const nbIds = new Set(ds.neighbors.map((n) => n.id));
 
     // ① 학습 데이터 표 — 행마다 data-flip이 있어 distances로 복사될 때 출발점이 된다
     const table = el('table.dtable', {},
-      el('thead', {}, el('tr', {}, el('th', {}, '#'), el('th', {}, '이름'), el('th', {}, '단맛'), el('th', {}, '아삭'), el('th', {}, '레이블'))),
+      el('thead', {}, el('tr', {}, el('th', {}, '#'), el('th', {}, '이름'), el('th', {}, '단맛'), el('th', {}, '아삭'), el('th', {}, '레이블'),
+        boxes.has('distances') ? el('th', {}, 'd²') : null)),
       el('tbody', {}, data.train.map((r, i) => el(`tr${r.id === ds.cur ? '.is-cur' : ''}`, { 'data-flip': `row-${r.id}` },
         el('td.num', {}, String(i)), el('td', {}, r.name), el('td.num', {}, String(r.x)), el('td.num', {}, String(r.y)),
-        el('td', {}, labelMark(r.label), ' ', r.label)))));
+        el('td', {}, labelMark(r.label), ' ', r.label),
+        boxes.has('distances') ? el('td.num', {}, ds.distances.find((d) => d.id === r.id) ? String(ds.distances.find((d) => d.id === r.id).d2) : '') : null))));
 
     // ② distances — (d, 레이블) 튜플의 리스트
     const dist = ds.distances.map((d, i) => chip({
@@ -134,7 +109,7 @@ export default {
     },
     el('span.tuple__idx', {}, String(i)),
     el('span.tuple__val', {}, `(${fmt(d.d)}, `, labelMark(d.label), ` ${d.label})`),
-    el('span.tuple__name', {}, d.name)));
+    el('span.tuple__name', {}, `${d.name} · d² ${d.d2}`)));
 
     // ③ neighbors — 앞 k개를 복사
     const nbs = ds.neighbors.map((n, i) => chip({
@@ -143,7 +118,7 @@ export default {
     },
     el('span.tuple__idx', {}, String(i)),
     el('span.tuple__val', {}, `(${fmt(n.d)}, `, labelMark(n.label), ` ${n.label})`),
-    el('span.tuple__name', {}, n.name)));
+    el('span.tuple__name', {}, `${n.name} · d² ${n.d2}`)));
 
     // ④ votes — 키(레이블) : 값(표 수). 표 하나하나를 토큰으로 그려 이웃에서 날아오게 한다
     const counted = [];
@@ -160,19 +135,20 @@ export default {
       ? el('div.answer', { 'data-cat': LABEL[ds.result].cat }, el('span.answer__label', {}, '예측'), labelMark(ds.result), ` ${ds.result}`)
       : null;
 
-    return el('div.flow.flow--knn', {},
-      sbox({ target: 'train', name: 'train', kind: '표', title: '학습 데이터', frame, cls: 'sbox--table' }, table),
-      flowArrow('거리 재서 복사'),
-      sbox({ target: 'distances', name: 'distances', kind: '리스트', title: ds.sorted ? '거리 목록 (정렬됨 ✓)' : '거리 목록', frame,
-        count: ds.distances.length, hint: '아직 비어 있음 — 1줄을 실행하면 생겨요', cls: 'sbox--list' }, dist),
-      flowArrow(`앞 ${ds.k}개`),
-      el('div.flow__col', {},
-        sbox({ target: 'neighbors', name: 'neighbors', kind: '리스트', title: `이웃 (k = ${ds.k})`, frame,
-          hint: '정렬한 뒤 앞에서 k개를 잘라 와요', cls: 'sbox--list' }, nbs),
+    // 이 쪽에 필요한 상자만 차례로 잇는다
+    const parts = [];
+    const add = (box, arrow) => { if (parts.length && arrow) parts.push(flowArrow(arrow)); parts.push(box); };
+    if (boxes.has('train')) add(sbox({ target: 'train', name: 'train', kind: '표', title: '학습 데이터', frame, cls: 'sbox--table' }, table));
+    if (boxes.has('distances')) add(sbox({ target: 'distances', name: 'distances', kind: '리스트', title: ds.sorted ? '거리 목록 (정렬됨 ✓)' : '거리 목록 (추가한 순서)', frame,
+      count: ds.distances.length, hint: '아직 비어 있음 — 1줄을 실행하면 생겨요', cls: 'sbox--list' }, dist), '거리 재서 추가');
+    if (boxes.has('neighbors')) add(sbox({ target: 'neighbors', name: '이웃', kind: '리스트', title: `가장 가까운 ${ds.k}개`, frame,
+      hint: '정렬한 뒤 앞에서 k개를 잘라 와요', cls: 'sbox--list' }, nbs), `앞 ${ds.k}개`);
+    if (boxes.has('votes')) {
+      add(el('div.flow__col', {},
         sbox({ target: 'votes', name: 'votes', kind: '딕셔너리', title: '레이블 → 표 수', frame,
           hint: frame.line >= 7 ? '{ } 빈 딕셔너리' : '7줄에서 만들어요', cls: 'sbox--dict' }, votes),
-        resultBox ? sbox({ target: 'result', name: 'return', title: '예측 결과', frame, cls: 'sbox--result' }, resultBox) : null,
-      ),
-    );
+        resultBox ? sbox({ target: 'result', name: '결과', title: '예측', frame, cls: 'sbox--result' }, resultBox) : null), '레이블 세기');
+    }
+    return el('div.flow.flow--knn', {}, parts);
   },
 };

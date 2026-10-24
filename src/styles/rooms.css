@@ -126,3 +126,110 @@ a.pill--link { display: inline-flex; align-items: center; text-decoration: none;
   .mapcards { grid-template-columns: 1fr; }
   .troom { padding: var(--sp-2); }
 }
+
+/* ============================================================
+   미션 — 무엇을 할지(지금 할 일 하나) · 다 하면 배운 것 · 알고리즘으로 잇기
+   ============================================================ */
+.mroom { display: grid; grid-template-columns: minmax(230px, 290px) minmax(0, 1fr); gap: var(--sp-3); align-items: start; }
+.mroom__activity { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.mission {
+  position: sticky; top: 0;
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2);
+}
+.mission__goal { font-size: var(--fs-sm); font-weight: 600; }
+.mission__goalcap { display: block; font-size: var(--fs-xs); color: var(--current); font-weight: 700; }
+.mission__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mstep { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-2); align-items: start; padding: 4px 6px; border-radius: var(--radius-sm); font-size: var(--fs-sm); }
+.mstep__no { width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; font-size: var(--fs-xs); font-weight: 700; border: 1px solid var(--border); background: var(--surface); }
+.mstep--later { color: var(--text-muted); }
+.mstep--later .mstep__do { opacity: .75; }
+.mstep--now { background: var(--current-bg); border: 1px solid var(--current); }
+.mstep--now .mstep__no { background: var(--current); border-color: var(--current); color: #fff; }
+.mstep--now .mstep__do { font-weight: 700; }
+.mstep--done .mstep__no { background: var(--open-bg); border-color: var(--open); color: var(--open); }
+.mstep--done .mstep__do { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--border-strong); }
+.mstep__see { margin-top: 2px; font-size: var(--fs-xs); color: var(--text); }
+.mission__learned { border: 1px solid var(--open); background: var(--open-bg); border-radius: var(--radius-sm); padding: var(--sp-2); font-size: var(--fs-sm); animation: narr-in .3s ease; }
+.mission__learnedcap { font-weight: 700; color: var(--open); }
+.mission__learned ul { margin: 2px 0 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 2px; }
+
+/* 지금 누를 단추 — 반짝이며 시선을 끈다 */
+.is-next { box-shadow: 0 0 0 3px var(--current-bg), 0 0 0 5px var(--current); animation: next-pulse 1.4s ease-in-out infinite; }
+select.is-next { border-color: var(--current); }
+.is-next-box { box-shadow: 0 0 0 3px var(--current); }
+@keyframes next-pulse { 0%, 100% { box-shadow: 0 0 0 2px var(--current-bg), 0 0 0 3px var(--current); } 50% { box-shadow: 0 0 0 4px var(--current-bg), 0 0 0 7px var(--current); } }
+.rowbtn { padding: 0 8px; border-radius: 999px; font-size: var(--fs-xs); font-family: var(--font-code); }
+.cellbtn { cursor: pointer; }
+.cellbtn:hover { background: var(--surface-2); }
+.is-next-cell { outline: 1px dashed var(--current); outline-offset: -2px; }
+
+/* 🤖 알고리즘 속에서는 */
+.connect { border-top: 1px solid var(--border); padding-top: var(--sp-2); }
+.connect--folded { display: flex; gap: var(--sp-2); align-items: center; font-size: var(--fs-sm); color: var(--text-muted); }
+.connect__title { font-size: var(--fs-md); margin: 0 0 var(--sp-2); }
+.connect__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-2); }
+.connect__card { border: 1px solid var(--border); border-left: 4px solid var(--path); border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); display: flex; flex-direction: column; gap: 4px; background: var(--surface); animation: narr-in .3s ease; }
+.connect__head { display: flex; justify-content: space-between; gap: var(--sp-2); font-weight: 700; font-size: var(--fs-sm); }
+.connect__lines { font-weight: 400; color: var(--text-muted); font-size: var(--fs-xs); }
+.connect__pseudo { font-size: var(--fs-xs); background: var(--surface-2); border-radius: 4px; padding: 2px 6px; }
+.connect__how { margin: 0; font-size: var(--fs-sm); }
+.connect__ex { margin: 0; font-size: var(--fs-xs); color: var(--text-muted); }
+.connect__go { align-self: flex-start; }
+
+/* 📦 안내 */
+.guide { display: flex; flex-direction: column; gap: var(--sp-2); }
+.guide__h { font-size: var(--fs-lg); }
+.guide__how { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 3px; }
+.guide__em { color: var(--current); font-weight: 700; }
+.guide__progress { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-weight: 700; }
+.guide__bar { width: 160px; height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
+.guide__fill { display: block; height: 100%; background: var(--open); }
+.toolcards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); }
+.toolcard { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-2) var(--sp-3); display: flex; flex-direction: column; gap: 4px; background: var(--surface); }
+.toolcard.is-done { border-color: var(--open); background: var(--open-bg); }
+.toolcard__head { display: flex; align-items: center; gap: var(--sp-2); }
+.toolcard__no { width: 24px; height: 24px; border-radius: 999px; display: grid; place-items: center; font-weight: 700; font-size: var(--fs-xs); border: 1px solid var(--border); }
+.toolcard.is-done .toolcard__no { background: var(--open); color: #fff; border-color: var(--open); }
+.toolcard__icon { font-size: calc(1.3rem * var(--scale)); }
+.toolcard__name { font-size: var(--fs-md); }
+.toolcard__row { font-size: var(--fs-sm); display: flex; gap: 6px; flex-wrap: wrap; align-items: baseline; }
+.toolcard__cap { font-size: var(--fs-xs); font-weight: 700; color: var(--current); min-width: 4.2em; }
+.toolcard .pill { align-self: flex-start; margin-top: 2px; }
+.guide__more summary { cursor: pointer; font-weight: 700; font-size: var(--fs-sm); }
+.guide__flows { margin: var(--sp-1) 0 0; font-size: var(--fs-sm); font-family: var(--font-code); }
+
+/* 🧾 추적표 */
+.ttable { display: flex; flex-direction: column; gap: 4px; }
+.ttable__title { font-size: var(--fs-md); margin: var(--sp-2) 0 0; }
+.ttable__note { margin: 0; font-size: var(--fs-xs); color: var(--text-muted); }
+.matrix--trace td, .matrix--trace th { text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.matrix--trace td.is-answer { background: var(--open-bg); font-weight: 700; }
+.reveal { min-width: 2.4em; padding: 0 8px; border-style: dashed; border-color: var(--current); color: var(--current); font-weight: 700; }
+
+/* 📝 연습 문제 — 한 번에 한 문제 */
+.examdots { display: flex; gap: 4px; flex-wrap: wrap; }
+.examdot { width: 28px; height: 28px; padding: 0; border-radius: 999px; font-weight: 700; font-size: var(--fs-xs); }
+.examdot.is-on { border-color: var(--current); box-shadow: 0 0 0 2px var(--current-bg); }
+.examdot.is-ok { background: var(--open-bg); border-color: var(--open); color: var(--open); }
+.examdot.is-no { background: var(--path-bg); border-color: var(--path); color: var(--path); }
+.examscore { font-weight: 700; font-size: var(--fs-sm); }
+.examcard { max-width: 860px; width: 100%; align-self: center; border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); background: var(--surface); box-shadow: var(--shadow); }
+.examcard__no { font-size: var(--fs-xs); color: var(--text-muted); font-weight: 700; }
+.examcard__cond { font-weight: 400; }
+.examcard__q { margin: 0; font-size: var(--fs-lg); font-weight: 700; line-height: 1.45; }
+.examcard__opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+.examopt { font-size: var(--fs-md); padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-sm); text-align: left; white-space: normal; }
+.examcard__why { border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); animation: narr-in .2s ease; }
+.examcard__why.is-ok { background: var(--open-bg); border: 1px solid var(--open); }
+.examcard__why.is-no { background: var(--path-bg); border: 1px solid var(--path); }
+.examcard__nav { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; }
+
+@media (max-width: 1100px) { .toolcards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+  .mroom { grid-template-columns: 1fr; }
+  .mission { position: static; }
+  .examcard__opts { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) { .toolcards { grid-template-columns: 1fr; } }

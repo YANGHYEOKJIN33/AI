@@ -8,7 +8,7 @@ const STORAGE_KEY = 'ml-ds-review:prefs';
 
 /** 새로 고쳐도 남길 값 — 고른 설정과 보던 쪽 */
 const PERSISTED = ['mode', 'toolsStep', 'algoStep', 'algoTab', 'wrapStep', 'params',
-  'speedId', 'theme', 'scale', 'quizOn'];
+  'speedId', 'theme', 'scale', 'quizOn', 'toolsDone'];
 
 function defaultParams() {
   return Object.fromEntries(ALGO_ORDER.map((id) => [id, { ...ALGORITHMS[id].defaults }]));
@@ -27,6 +27,7 @@ const initial = {
 
   speedId: 'normal',
   quizOn: true,         // 🔮 예측 퀴즈를 낼까
+  toolsDone: {},        // 📦 도구 쪽마다 미션을 마쳤나 { table: true, … }
 
   theme: 'auto',        // auto | light | dark
   scale: 1,             // 글자 크기 배율
@@ -37,6 +38,7 @@ function sanitize(saved) {
   for (const key of PERSISTED) if (key in saved) out[key] = saved[key];
   if (!['tools', 'algo', 'wrap'].includes(out.mode)) delete out.mode;
   if (out.algoTab && !ALGO_ORDER.includes(out.algoTab)) delete out.algoTab;
+  if (typeof out.toolsDone !== 'object' || out.toolsDone === null) delete out.toolsDone;
   if (out.params) {
     const params = defaultParams();
     for (const id of ALGO_ORDER) params[id] = normalizeParams(id, out.params[id]);

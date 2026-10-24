@@ -2,7 +2,7 @@
  * 예측 퀴즈 — 다음 장면에 "예측해 볼 일"이 걸려 있으면, 넘어가기 전에 먼저 묻는다.
  * (8-퍼즐 사이트의 "다음에 꺼낼 노드는?"과 같은 역할)
  *
- *  - ②·③쪽에서만, 🔮 예측 퀴즈가 켜져 있을 때만 나온다.
+ *  - 의사코드를 밟는 쪽에서만, 🔮 예측 퀴즈가 켜져 있을 때만 나온다.
  *  - 강요하지 않는다: 그냥 ⏭ 한 단계를 눌러도 넘어간다.
  *  - ▶ 재생 중이면 퀴즈 앞에서 멈춰 기다린다(player.setHold).
  */
@@ -17,8 +17,7 @@ export function createCoach(store, player) {
   function enabled() {
     const s = store.get();
     if (!s.quizOn || s.mode !== 'algo') return false;
-    const page = currentStep(s);
-    return page && (page.id === 'pseudo' || page.id === 'python');
+    return currentStep(s)?.kind === 'step';
   }
 
   player.setHold((nextIndex) => {

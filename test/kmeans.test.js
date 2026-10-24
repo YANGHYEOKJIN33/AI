@@ -7,52 +7,43 @@ const byId = Object.fromEntries(HOUSES.map((p) => [p.id, p]));
 
 function checkFixedPoint(result) {
   const { clusters, centroids } = result;
-  // 중심 = 묶음 평균
   clusters.forEach((cl, c) => {
-    if (cl.length === 0) return;
     const mx = cl.reduce((s, id) => s + byId[id].x, 0) / cl.length;
     const my = cl.reduce((s, id) => s + byId[id].y, 0) / cl.length;
-    assert.ok(Math.abs(mx - centroids[c].x) < 1e-9);
-    assert.ok(Math.abs(my - centroids[c].y) < 1e-9);
+    assert.ok(Math.abs(mx - centroids[c].x) < 1e-9 && Math.abs(my - centroids[c].y) < 1e-9);
   });
-  // 모든 점은 가장 가까운 중심의 묶음에 있다
-  clusters.forEach((cl, c) => cl.forEach((id) => {
-    assert.equal(kmeans.assignPoint(byId[id], centroids), c);
-  }));
+  clusters.forEach((cl, c) => cl.forEach((id) => assert.equal(kmeans.assignPoint(byId[id], centroids), c)));
 }
 
-test('기본(k=3, 앞의 3개로 시작)은 3번 반복해 수렴하고 세 동네를 찾는다', () => {
-  const r = kmeans.run({ variant: 'k3' });
-  assert.equal(r.result.converged, true);
+test('기본(집1·집2에서 시작): 1회차 (5, 6.5)·(2, 2) → 2회차에 집1이 옮겨 (6, 7)·(2, 3) → 3회차 수렴', () => {
+  const r = kmeans.run({ start: 'p12' });
+  const h = r.result.history;
   assert.equal(r.result.iterations, 3);
-  assert.deepEqual(r.result.clusters.map((c) => c.slice().sort()), [
-    ['p0', 'p3', 'p4'], ['p1', 'p2', 'p5', 'p6'], ['p7', 'p8', 'p9'],
+  assert.deepEqual(h.map((x) => x.next.map((c) => [c.x, c.y])), [
+    [[5, 6.5], [2, 2]], [[6, 7], [2, 3]], [[6, 7], [2, 3]],
   ]);
+  assert.deepEqual(h[1].changed, ['p0']);
   checkFixedPoint(r.result);
 });
 
-test('나쁜 시작은 지역 최적에 수렴한다 — 묶음 안 거리 제곱합이 더 크다', () => {
-  const good = kmeans.run({ variant: 'k3' }).result;
-  const bad = kmeans.run({ variant: 'bad' }).result;
-  assert.equal(bad.converged, true);
-  checkFixedPoint(bad);
-  assert.ok(kmeans.sse(bad.clusters, bad.centroids) > kmeans.sse(good.clusters, good.centroids) + 1);
-});
-
-test('k=2·4도 수렴하고 고정점 조건을 만족한다', () => {
-  for (const variant of ['k2', 'k4']) {
-    const r = kmeans.run({ variant });
-    assert.equal(r.result.converged, true);
+test('모든 시작 조건이 수렴하고, 1회차 할당에 거리 동점이 없다', () => {
+  for (const s of kmeans.STARTS) {
+    const r = kmeans.run({ start: s.id });
+    assert.equal(r.result.converged, true, s.id);
     checkFixedPoint(r.result);
+    for (const f of r.frames.filter((fr) => fr.action === 'nearest')) {
+      const ds = f.ds.curDists;
+      assert.equal(ds.filter((d) => d === Math.min(...ds)).length, 1, `${s.id} ${f.ds.cur}`);
+    }
   }
 });
 
 test('점은 언제나 대기 줄이나 묶음 한 곳에만 있다 (데이터 이동 보존)', () => {
-  for (const variant of ['k3', 'bad']) {
-    for (const f of kmeans.run({ variant }).frames) {
+  for (const s of kmeans.STARTS) {
+    for (const f of kmeans.run({ start: s.id }).frames) {
       const all = [...f.ds.pool, ...f.ds.clusters.flat()];
-      assert.equal(all.length, HOUSES.length);
       assert.equal(new Set(all).size, HOUSES.length);
+      assert.equal(all.length, HOUSES.length);
     }
   }
 });

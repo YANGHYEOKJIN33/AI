@@ -8,8 +8,8 @@ import { ALGO_TABS } from '../app/lesson.js';
 
 const MODES = [
   { id: 'tools', label: '📦 자료구조 도구', tip: '네 알고리즘이 함께 쓰는 표·거리·정렬·딕셔너리·묶음·갱신을 손으로 다시 익힙니다' },
-  { id: 'algo',  label: '🤖 알고리즘',     tip: '알고리즘마다 복습 → 의사코드 한 단계씩 → 파이썬 대조' },
-  { id: 'wrap',  label: '✅ 정리·확인',    tip: '한 장 정리와 이해 확인 문제' },
+  { id: 'algo',  label: '🤖 알고리즘',     tip: '알고리즘마다 문제 보기 → 의사코드 한 단계씩 → 추적표 → 시험 대비 연습' },
+  { id: 'wrap',  label: '✅ 정리·확인',    tip: '한 장 정리 · 종합 모의시험 · 개념 확인' },
 ];
 
 export const ALGO_ICON = { knn: '📍', kmeans: '🎯', linreg: '📈', dtree: '🌳' };
@@ -49,7 +49,7 @@ export function mountTopbar(root, store, { onHelp = () => {}, onGlossary = () =>
     el('div.topbar__row', {},
       el('h1.topbar__title', {},
         '자료구조로 다시 보는 머신러닝',
-        el('small', {}, 'k-NN · k-평균 · 선형회귀 · 의사결정트리 — 데이터 이동 → 의사코드 → 파이썬'),
+        el('small', {}, 'k-NN · k-평균 · 선형회귀 · 의사결정트리 — 데이터 이동 → 의사코드 → 추적표 → 시험 연습'),
       ),
       el('div.modetabs', { role: 'tablist', 'aria-label': '무엇을 할까요' }, modeButtons),
       el('span.topbar__spacer'),

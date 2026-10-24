@@ -17,6 +17,8 @@ export function createPlayer(store) {
   let timer = null;
   let loadSeq = 0;      // 다시 실을 때마다 늘어 — 화면이 "새 실행"인지 알 수 있다
   let hold = () => false;
+  let lo = 0;           // 이 쪽에서 재생할 장면 범위 [lo, hi]
+  let hi = 0;
   const listeners = new Set();
 
   function view() {
@@ -29,15 +31,17 @@ export function createPlayer(store) {
       frames: run.frames,
       frame,
       prev: index > 0 ? run.frames[index - 1] : null,
-      next: index + 1 < run.frames.length ? run.frames[index + 1] : null,
+      next: index < hi ? run.frames[index + 1] : null,
       ds: frame.ds,
       data: run.data,
       result: run.result,
       params: run.params,
       index,
       total: run.frames.length,
-      atStart: index === 0,
-      atEnd: index === run.frames.length - 1,
+      lo,
+      hi,
+      atStart: index <= lo,
+      atEnd: index >= hi,
       playing: timer !== null,
       loadSeq,
     };
@@ -50,7 +54,7 @@ export function createPlayer(store) {
 
   function goTo(target) {
     if (!run) return;
-    index = Math.max(0, Math.min(run.frames.length - 1, target));
+    index = Math.max(lo, Math.min(hi, target));
     emit();
   }
 
@@ -63,7 +67,7 @@ export function createPlayer(store) {
   }
 
   function tick() {
-    if (!run || index >= run.frames.length - 1) { pause(); return; }
+    if (!run || index >= hi) { pause(); return; }
     // 다음 장면에 예측 퀴즈가 있고 아직 안 풀었으면 멈춰서 기다린다
     if (hold(index + 1)) { pause(); return; }
     index += 1;
@@ -72,7 +76,7 @@ export function createPlayer(store) {
 
   function play() {
     if (!run || timer !== null) return;
-    if (index >= run.frames.length - 1) index = 0;   // 끝에서 재생하면 처음부터
+    if (index >= hi) index = lo;   // 끝에서 재생하면 이 쪽의 처음부터
     const speed = SPEEDS.find((s) => s.id === store.get().speedId) ?? SPEEDS[1];
     timer = setInterval(tick, speed.ms);
     emit();
@@ -87,6 +91,8 @@ export function createPlayer(store) {
       const params = normalizeParams(id, store.get().params[id]);
       run = getAlgorithm(id).run(params);
       index = 0;
+      lo = 0;
+      hi = run.frames.length - 1;
       loadSeq += 1;
       emit();
       if (wasPlaying) play();
@@ -98,10 +104,21 @@ export function createPlayer(store) {
       if (algoId !== id || !run) this.load(id);
     },
 
+    /** 이 쪽에서 오갈 장면 범위를 정하고 그 처음으로 간다 */
+    setWindow(a, b, { keep = false } = {}) {
+      if (!run) return;
+      pause();
+      lo = Math.max(0, Math.min(a, run.frames.length - 1));
+      hi = Math.max(lo, Math.min(b, run.frames.length - 1));
+      index = keep ? Math.max(lo, Math.min(hi, index)) : lo;
+      emit();
+    },
+    frames() { return run ? run.frames : []; },
+
     step(dir) { pause(); goTo(index + (dir < 0 ? -1 : 1)); },
-    reset() { pause(); goTo(0); },
-    toEnd() { pause(); goTo(run ? run.frames.length - 1 : 0); },
-    nextIter() { pause(); if (run) goTo(nextIterIndex(run.frames, index)); },
+    reset() { pause(); goTo(lo); },
+    toEnd() { pause(); goTo(hi); },
+    nextIter() { pause(); if (run) goTo(Math.min(hi, nextIterIndex(run.frames, index))); },
     goTo(i) { pause(); goTo(i); },
     play,
     pause,

@@ -9,16 +9,14 @@
 import { el } from '../dom.js';
 import { createPlot } from '../plot.js';
 import { sbox, flowArrow, mark, varCell } from '../structures.js';
-import { fmt, dist } from '../../core/math.js';
+import { fmt } from '../../core/math.js';
 import { HOUSES, HOUSE_AXES, CLUSTER_STYLE } from '../../core/datasets.js';
-import { clusterName, assignPoint } from '../../core/algorithms/kmeans.js';
+import { clusterName } from '../../core/algorithms/kmeans.js';
 
 const byId = Object.fromEntries(HOUSES.map((p) => [p.id, p]));
 const cat = (c) => String(c + 1);
 const TARGET_NAME = { centroids: 'centroids', clusters: 'clusters', newCentroids: 'new', result: '결과' };
 
-/** ①쪽 써 보기 — 그림을 눌러 놓은 새 집 */
-let tryPoint = null;
 
 function assignOf(ds) {
   const map = {};
@@ -29,41 +27,29 @@ function assignOf(ds) {
 export default {
   stageTitle: '산점도 — 마을 지도',
   stageHint: '● 집 · ◆ 중심(배달 거점) · 점선 = 중심이 지나온 길',
-  targetName: (t) => (t.startsWith('cluster') && t !== 'clusters' ? `clusters[${clusterName(+t.slice(7))}]` : TARGET_NAME[t] ?? t),
+  targetName: (t) => (t.startsWith('cluster') && t !== 'clusters' ? `묶음 ${clusterName(+t.slice(7))}` : TARGET_NAME[t] ?? t),
 
-  reviewInfo: {
-    one: '정답 없이 가까운 점끼리 k개 묶음으로 나눠요. "가까운 중심으로 나누기 → 평균으로 중심 옮기기"를 중심이 멈출 때까지 반복해요.',
-    input: '점들(특징만, 레이블 없음), 묶음 수 k',
-    output: 'k개 묶음 + 묶음마다 중심',
-    phaseDs: ['points[:k] ➜ centroids', 'points ➜ clusters[c] (append)', 'clusters ➜ 평균 ➜ new ➜ centroids', 'new == centroids ?'],
-    tools: ['table', 'distance', 'group', 'update'],
-    remember: [
-      '비지도학습 — 정답 레이블 없이 묶음을 스스로 찾아요.',
-      '시작 중심에 따라 결과가 달라질 수 있어요(지역 최적). 그래서 여러 번 시작해 보고 가장 좋은 결과를 고르기도 해요.',
-      '묶음 수 k는 사람이 정해요. 반복할 때마다 묶음을 비우고 처음부터 다시 나눠요.',
+  intro: {
+    question: '집 6채를 가까운 것끼리 2개 묶음으로 나누면 배달 거점(중심)은 어디일까?',
+    input: '점들(가로, 세로 — 정답 레이블 없음), 묶음 수 k, 시작 중심',
+    output: 'k개 묶음 + 묶음마다 중심(평균 위치)',
+    tips: [
+      '할당: 집1부터 차례로, d²이 가장 작은 중심의 묶음에 넣어요.',
+      '갱신: 묶음에 든 점들의 x 평균, y 평균이 새 중심이에요.',
+      '새 중심 = 지금 중심이면 멈춰요(수렴). 몇 회차에 멈추는지, 어떤 집이 묶음을 옮기는지 자주 물어요.',
     ],
   },
+  introBoxes: ['pool', 'centroids'],
 
-  outcome(run) {
-    const sizes = run.result.clusters.map((cl, c) => `${clusterName(c)} ${cl.length}`).join(' · ');
-    return `${run.result.iterations}번 반복 · 묶음 ${sizes}`;
-  },
-
-  createPlot({ store, player }) {
+  createPlot() {
     return createPlot({
       x: [HOUSE_AXES.min, HOUSE_AXES.max], y: [HOUSE_AXES.min, HOUSE_AXES.max],
       width: 320, height: 296, xLabel: `${HOUSE_AXES.x} →`, yLabel: `${HOUSE_AXES.y} →`,
       ariaLabel: '집 위치와 묶음 중심',
-      onClick: (x, y) => {
-        const s = store.get();
-        if (s.mode !== 'algo' || s.algoStep !== 0) return;
-        tryPoint = { x: Math.round(x * 2) / 2, y: Math.round(y * 2) / 2 };
-        player.goTo(player.view().total - 1);   // 학습이 끝난 모델로 보여 준다
-      },
     });
   },
 
-  shapes(v, { page }) {
+  shapes(v) {
     const { ds } = v;
     const shapes = [];
     const assign = assignOf(ds);
@@ -111,13 +97,6 @@ export default {
       key: `c-${c}`, kind: 'point', x: ct.x, y: ct.y, shape: 'diamond', size: 8.5,
       cls: `centroid cat-${cat(c)}`, label: clusterName(c), title: `중심 ${clusterName(c)} (${fmt(ct.x)}, ${fmt(ct.y)})`,
     }));
-    // 써 보기: 새 집
-    if (page === 'review' && tryPoint && v.atEnd) {
-      const c = assignPoint(tryPoint, v.result.centroids);
-      const ct = v.result.centroids[c];
-      shapes.push({ key: 'try-line', kind: 'line', x1: tryPoint.x, y1: tryPoint.y, x2: ct.x, y2: ct.y, cls: 'toCentroid is-best' });
-      shapes.push({ key: 'try', kind: 'point', x: tryPoint.x, y: tryPoint.y, shape: 'star', size: 8, cls: `query cat-${cat(c)}`, label: `새 집 → ${clusterName(c)}` });
-    }
     return shapes;
   },
 
@@ -128,22 +107,7 @@ export default {
       el('span.legend__item', {}, el('span.mark', {}, '◆'), '중심'));
   },
 
-  extra(v, { page }) {
-    if (page !== 'review') return null;
-    if (!tryPoint || !v.atEnd) {
-      return el('div.tryit', {},
-        el('div.tryit__title', {}, '👆 써 보기 — 학습이 끝난 뒤 그림을 눌러 새 집을 놓아 보세요'),
-        el('div', {}, v.atEnd ? '어느 거점(중심)에 배정될까요?' : '⏩ 끝까지 또는 ▶ 재생으로 먼저 묶음을 완성하세요.'));
-    }
-    const ds = v.result.centroids.map((ct) => dist([tryPoint.x, tryPoint.y], [ct.x, ct.y]));
-    const c = ds.indexOf(Math.min(...ds));
-    return el('div.tryit', {},
-      el('div.tryit__title', {}, `👆 새 집 (${tryPoint.x}, ${tryPoint.y})`),
-      el('div', {}, ds.map((d, i) => `${clusterName(i)}까지 ${fmt(d)}`).join(' · ')),
-      el('div.tryit__row', {}, '→ 가장 가까운 거점: ', el('strong.tryit__answer', { 'data-cat': cat(c) }, `묶음 ${clusterName(c)}`)));
-  },
-
-  data(v) {
+  data(v, { boxes }) {
     const { ds, frame } = v;
     const assign = assignOf(ds);
     const housechip = (id) => {
@@ -156,17 +120,17 @@ export default {
       }, c === undefined ? null : mark(CLUSTER_STYLE[c].shape, cat(c)), `${p.name}`, el('small', {}, ` (${p.x},${p.y})`));
     };
 
-    const pool = sbox({ target: 'pool', name: 'points', kind: '리스트', title: '대기 줄 — 아직 나누지 않은 점', frame,
+    const pool = sbox({ target: 'pool', name: '점', kind: '리스트', title: '대기 줄 — 아직 나누지 않은 점', frame,
       count: ds.pool.length, hint: '모두 묶음에 들어갔어요', cls: 'sbox--pool', bodyCls: 'pool' },
     ds.pool.map(housechip));
 
     const bins = el('div.bins', {}, ds.clusters.map((cl, c) => el(`div.bin${frame.effects.some((e) => e.target === `cluster${c}`) ? '.is-hot' : ''}`, {
       'data-cat': cat(c), 'data-flip': `bin-${c}`,
     },
-    el('div.bin__head', {}, mark(CLUSTER_STYLE[c].shape, cat(c)), `clusters[${c}] · ${clusterName(c)}`, el('span.bin__sub', {}, `${cl.length}개`)),
+    el('div.bin__head', {}, mark(CLUSTER_STYLE[c].shape, cat(c)), `묶음 ${clusterName(c)}`, el('span.bin__sub', {}, `${cl.length}개`)),
     el('div.bin__body', {}, cl.map(housechip)))));
 
-    const clustersBox = sbox({ target: 'clusters', name: 'clusters', kind: '리스트', title: `묶음 ${ds.k}개 (리스트의 리스트)`,
+    const clustersBox = sbox({ target: 'clusters', name: '묶음', kind: '리스트', title: `묶음 ${ds.k}개`,
       op: frame.effects.find((e) => e.target === 'clusters' || e.target.startsWith('cluster'))?.op ?? null }, bins);
 
     const centroidRows = ds.centroids.map((ct, c) => el(`div.kv${ds.moved?.[c] === false ? '.is-win' : ''}`, {
@@ -187,21 +151,22 @@ export default {
     el('span', {}, `(${fmt(nc.x)}, ${fmt(nc.y)})`),
     el('span.kv__val', {}, ds.moved ? (ds.moved[c] ? '움직임' : '그대로') : ''))) : [];
 
+    const left = [];
+    if (boxes.has('pool')) left.push(pool);
+    if (boxes.has('pool') && boxes.has('clusters')) left.push(flowArrow('가장 가까운 중심의 묶음으로 이동', 'down'));
+    if (boxes.has('clusters')) left.push(clustersBox);
+    const right = [];
+    if (boxes.has('newCentroids')) right.push(sbox({ target: 'newCentroids', name: '새 중심', kind: '리스트', title: '묶음마다 평균', frame,
+      hint: '7줄에서 묶음마다 평균을 내요' }, newRows));
+    if (boxes.has('centroids')) right.push(sbox({ target: 'centroids', name: '중심', kind: '리스트', title: '지금 중심', frame }, centroidRows));
+    right.push(el('div.vars', {},
+      varCell('회차', String(ds.iter), { hot: frame.action === 'loop' }),
+      varCell('k', String(ds.k)),
+      ds.done ? varCell('결과', '수렴 ✓', { hot: true }) : null));
     return el('div.flow.flow--kmeans', {},
-      el('div.flow__col.flow__col--wide', {},
-        pool,
-        flowArrow('가장 가까운 중심의 묶음으로 이동', 'down'),
-        clustersBox),
-      flowArrow('평균'),
-      el('div.flow__col', {},
-        sbox({ target: 'newCentroids', name: 'new', kind: '리스트', title: '새 중심 = 묶음 평균', frame,
-          hint: '7줄에서 묶음마다 평균을 내요' }, newRows),
-        sbox({ target: 'centroids', name: 'centroids', kind: '리스트', title: '지금 중심', frame }, centroidRows),
-        el('div.vars', {},
-          varCell('반복', String(ds.iter), { hot: frame.action === 'loop' }),
-          varCell('k', String(ds.k)),
-          ds.done ? varCell('결과', '수렴 ✓', { hot: true }) : null),
-      ),
+      left.length ? el('div.flow__col.flow__col--wide', {}, left) : null,
+      left.length ? flowArrow(boxes.has('newCentroids') ? '평균' : '') : null,
+      el('div.flow__col', {}, right),
     );
   },
 };

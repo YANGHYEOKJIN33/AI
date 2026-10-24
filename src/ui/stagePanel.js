@@ -25,7 +25,8 @@ export function mountStagePanel(root, store, player, views) {
 
   function ctx() {
     const state = store.get();
-    return { store, player, state, page: currentStep(state)?.id, refreshPlot };
+    const step = currentStep(state);
+    return { store, player, state, page: step?.id, kind: step?.kind, refreshPlot };
   }
 
   /** 그림만 다시 그린다 — 써 보기 슬라이더처럼 옆 칸을 갈아 끼우면 안 되는 조작에 쓴다 */
@@ -53,9 +54,10 @@ export function mountStagePanel(root, store, player, views) {
     plot.update(view.shapes(v, c));
     fill(legendBox, view.legend ? view.legend(v, c) : null);
 
+    calcBox.hidden = c.kind === 'intro';   // 문제 보기 쪽에서는 계산이 없다
     // 이 줄에 계산이 없으면 바로 앞 줄의 계산을 흐리게 남겨 둔다 (예: 거리를 잰 뒤 리스트에 추가할 때)
     const own = v.frame.calc;
-    const calc = own ?? v.prev?.calc ?? null;
+    const calc = own ?? (v.index > v.lo ? v.prev?.calc : null) ?? null;
     if (calc) {
       fill(calcBox,
         el('div.calc__title', {}, calc.title, own ? null : el('span.calc__stale', {}, ' · 방금 전 줄의 계산')),

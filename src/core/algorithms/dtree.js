@@ -23,15 +23,9 @@ export const meta = Object.freeze({
   phases: ['멈출지 확인하기(잎?)', '특징마다 나눠 보기', '가장 깨끗한 특징 고르기', '가지마다 다시 만들기(재귀)'],
 });
 
-const VARIANTS = {
-  gini:    { criterion: 'gini',    maxDepth: null },
-  entropy: { criterion: 'entropy', maxDepth: null },
-  depth1:  { criterion: 'gini',    maxDepth: 1 },
-};
+export const defaults = Object.freeze({ criterion: 'gini', maxDepth: null });
 
-export const defaults = Object.freeze({ variant: 'gini' });
-
-function variantOf(params) { return VARIANTS[params?.variant] ?? VARIANTS.gini; }
+function variantOf(params) { return normalize(params); }
 const critName = (c) => (c === 'entropy' ? '엔트로피' : '지니 불순도');
 
 export function pseudo(params = defaults) {
@@ -50,22 +44,6 @@ export function pseudo(params = defaults) {
   ];
 }
 
-export function python(params = defaults) {
-  const v = variantOf(params);
-  return [
-    'def build(rows, features, depth):',
-    '    if len(set(r.label for r in rows)) == 1: return Leaf(rows[0].label)',
-    `    if not features or depth == ${v.maxDepth ?? 'None'}: return Leaf(majority(rows))`,
-    '    for A in features:',
-    '        groups = split(rows, A)',
-    `        score[A] = weighted(groups, ${v.criterion})`,
-    '    best = min(score, key=score.get)',
-    '    node = Node(best)',
-    '    for v, sub in split(rows, best).items(): node.kids[v] = build(sub, features - {best}, depth + 1)',
-    '    return node',
-  ];
-}
-
 export const notes = [
   '트리를 만드는 함수가 불릴 때마다 호출 스택에 한 칸이 쌓여요. 처음엔 데이터 14개, 특징 4개로 불려요.',
   '이 묶음의 레이블이 모두 같다면 더 나눌 필요가 없어요. 그 레이블을 답으로 하는 잎 노드를 돌려줘요.',
@@ -79,17 +57,25 @@ export const notes = [
   '모든 가지를 다 만들었으면 이 노드를 돌려줘요. 호출 스택에서 한 칸이 빠져요(pop).',
 ];
 
-export const coreLine = 5;
-export const coreWhy = '무엇으로 "섞인 정도"를 재느냐(지니·엔트로피)와 어디서 멈추느냐(최대 깊이)가 트리 모양을 정해요.';
-export const swap = Object.freeze({
-  label: '불순도 기준 / 최대 깊이',
-  options: [
-    { id: 'gini',    text: 'score[A] = weighted(groups, gini)',      params: { variant: 'gini' } },
-    { id: 'entropy', text: 'score[A] = weighted(groups, entropy)',   params: { variant: 'entropy' } },
-    { id: 'depth1',  text: 'if ... depth == 1: return Leaf(...)   # 최대 깊이 1', params: { variant: 'depth1' } },
-  ],
-});
-export function swapIdOf(params) { return params?.variant ?? 'gini'; }
+export const knobs = [
+  { key: 'criterion', label: '불순도 기준', options: [
+    { id: 'gini', label: '지니 불순도', patch: { criterion: 'gini' } },
+    { id: 'entropy', label: '엔트로피', patch: { criterion: 'entropy' } },
+  ] },
+  { key: 'maxDepth', label: '최대 깊이', options: [
+    { id: 'none', label: '제한 없음', patch: { maxDepth: null } },
+    { id: '1', label: '최대 깊이 1', patch: { maxDepth: 1 } },
+  ] },
+];
+export function knobValue(params, key) {
+  return key === 'criterion' ? params.criterion : (params.maxDepth === 1 ? '1' : 'none');
+}
+export function normalize(params) {
+  return {
+    criterion: params?.criterion === 'entropy' ? 'entropy' : 'gini',
+    maxDepth: params?.maxDepth === 1 ? 1 : null,
+  };
+}
 
 const LABEL_IDS = PLAY_LABELS.map((l) => l.id);
 
@@ -350,7 +336,7 @@ export function run(params = defaults) {
     frames: rec.frames,
     data: { rows: PLAY_DAYS, features: PLAY_FEATURES, values: PLAY_VALUES },
     result: { nodes: ds.nodes, root: ds.root, depth: depthMax, leaves: leaves.length },
-    params: { variant: params?.variant ?? 'gini' },
+    params: variantOf(params),
   };
 }
 

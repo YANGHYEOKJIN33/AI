@@ -51,15 +51,13 @@ export function mountActionCard(root, store, player, coach) {
           el('div.action-card__plain', {}, '⏭ 한 단계를 누르면 무슨 일이 생기는지 여기에 알려 줄게요.'))));
       return;
     }
-    const vis = ACTION_VIS[v.frame.action] ?? { icon: '•', word: '진행', term: '', plain: '' };
-    fill(card, el('div.action-card', { 'data-action': v.frame.action },
+    // 한 줄로 — 무엇을 했나(낱말) + 이 장면에서 실제로 일어난 일. 일반 설명은 마우스를 올리면 보인다.
+    const vis = ACTION_VIS[v.frame.action] ?? { icon: '•', word: '진행', plain: '' };
+    fill(card, el('div.action-card', { 'data-action': v.frame.action, title: vis.plain },
       el('div.action-card__icon', { 'aria-hidden': 'true' }, vis.icon),
       el('div.action-card__body', {},
-        el('div.action-card__head', {},
-          el('span.action-card__word', {}, vis.word),
-          vis.term ? el('span.action-card__term', {}, vis.term) : null,
-          el('span.action-card__plain', {}, vis.plain)),
-        el('div.action-card__detail', {}, v.frame.narration))));
+        el('span.action-card__word', {}, vis.word),
+        el('span.action-card__detail', {}, v.frame.narration))));
   }
   player.subscribe(draw);
 }

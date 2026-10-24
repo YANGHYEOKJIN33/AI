@@ -81,8 +81,10 @@ export function mountControls(root, store, player) {
     if (label) { jump.textContent = `⏭⏭ ${label}`; jump.title = `${label}의 처음으로 (PageDown)`; }
     jump.disabled = !ready || v.atEnd;
     buttons.get('play').textContent = v.playing ? '⏸ 일시정지' : (ready && v.atEnd ? '↻ 다시 재생' : '▶ 재생');
-    const pct = ready ? (v.index / Math.max(1, v.total - 1)) * 100 : 0;
-    progressFill.style.width = `${pct}%`;
-    progressText.textContent = ready ? `${v.index + 1} / ${v.total}` : '';
+    // 이 쪽에서 밟는 장면만 센다
+    const span = ready ? v.hi - v.lo + 1 : 1;
+    const at = ready ? v.index - v.lo + 1 : 0;
+    progressFill.style.width = `${span > 1 ? ((at - 1) / (span - 1)) * 100 : 100}%`;
+    progressText.textContent = ready ? `${at} / ${span}` : '';
   });
 }
