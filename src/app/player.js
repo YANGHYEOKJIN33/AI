@@ -19,18 +19,23 @@ export function createPlayer(store) {
   let hold = () => false;
   let lo = 0;           // 이 쪽에서 재생할 장면 범위 [lo, hi]
   let hi = 0;
+  let readyLo = false;  // lo 장면이 "이 쪽의 줄을 실행하기 전 모습"인가
   const listeners = new Set();
 
   function view() {
     if (!run) return { empty: true };
-    const frame = run.frames[index];
+    const ready = readyLo && index === lo;
+    // 실행 전 모습: 자료구조는 그대로 두고, 이 장면이 한 일(줄·꼬리표·계산)은 지운다
+    const frame = ready
+      ? { ...run.frames[index], line: 0, action: 'ready', narration: '', effects: [], calc: null, ask: null }
+      : run.frames[index];
     return {
       empty: false,
       algoId,
       algo: getAlgorithm(algoId),
       frames: run.frames,
       frame,
-      prev: index > 0 ? run.frames[index - 1] : null,
+      prev: index > 0 && !ready ? run.frames[index - 1] : null,
       next: index < hi ? run.frames[index + 1] : null,
       ds: frame.ds,
       data: run.data,
@@ -41,6 +46,8 @@ export function createPlayer(store) {
       lo,
       hi,
       atStart: index <= lo,
+      ready,
+      readyLo,
       atEnd: index >= hi,
       playing: timer !== null,
       loadSeq,
@@ -93,6 +100,7 @@ export function createPlayer(store) {
       index = 0;
       lo = 0;
       hi = run.frames.length - 1;
+      readyLo = false;
       loadSeq += 1;
       emit();
       if (wasPlaying) play();
@@ -104,12 +112,13 @@ export function createPlayer(store) {
       if (algoId !== id || !run) this.load(id);
     },
 
-    /** 이 쪽에서 오갈 장면 범위를 정하고 그 처음으로 간다 */
-    setWindow(a, b, { keep = false } = {}) {
+    /** 이 쪽에서 오갈 장면 범위를 정하고 그 처음으로 간다. ready = 처음 장면은 "실행 전 모습" */
+    setWindow(a, b, { keep = false, ready = false } = {}) {
       if (!run) return;
       pause();
       lo = Math.max(0, Math.min(a, run.frames.length - 1));
       hi = Math.max(lo, Math.min(b, run.frames.length - 1));
+      readyLo = ready && hi > lo;
       index = keep ? Math.max(lo, Math.min(hi, index)) : lo;
       emit();
     },

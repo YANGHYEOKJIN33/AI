@@ -279,30 +279,7 @@
 /* ───────────── 코드 패널 ───────────── */
 .codepanel { display: flex; flex-direction: column; }
 
-/* ① 복습 카드 */
-.review { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-sm); }
 .review__tags { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
-.review__one { margin: 0; font-size: var(--fs-md); font-weight: 600; }
-.review__io { display: flex; align-items: stretch; gap: var(--sp-2); }
-.review__iobox { flex: 1 1 0; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-1) var(--sp-2); background: var(--surface-2); }
-.review__iolabel { display: block; font-size: var(--fs-xs); font-weight: 700; color: var(--current); }
-.review__ioarrow { align-self: center; color: var(--text-muted); }
-.review__h { font-size: var(--fs-sm); margin: var(--sp-1) 0 0; }
-.phases { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.phase {
-  display: grid; grid-template-columns: auto 1fr; gap: 0 var(--sp-2); align-items: center;
-  padding: 3px var(--sp-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  transition: background .2s ease, border-color .2s ease;
-}
-.phase__no { grid-row: span 2; width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--border); font-weight: 700; font-size: var(--fs-xs); }
-.phase__name { font-weight: 700; }
-.phase__ds { font-family: var(--font-code); font-size: var(--fs-xs); color: var(--text-muted); }
-.phase.is-on { border-color: var(--current); background: var(--current-bg); }
-.phase.is-on .phase__no { background: var(--current); color: #fff; border-color: var(--current); }
-.phase.is-done .phase__no { background: var(--open-bg); color: var(--open); border-color: var(--open); }
-.review__tools { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
-.toolchip { font-size: var(--fs-xs); }
-.review__remember { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 2px; color: var(--text); }
 
 /* ② 의사코드 */
 .pseudowrap { display: flex; flex-direction: column; gap: var(--sp-2); min-height: 0; }
@@ -361,7 +338,8 @@
 .intro__io > div { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--sp-1) var(--sp-2); background: var(--surface-2); }
 .intro__label { display: block; font-size: var(--fs-xs); font-weight: 700; color: var(--current); }
 .intro__h { font-size: var(--fs-sm); margin: var(--sp-1) 0 0; }
-.intro__steps { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 3px; }
+.intro__steps { display: flex; flex-wrap: wrap; gap: 4px; }
+.intro__step { font-size: var(--fs-xs); padding: 2px 10px; }
 .intro__tips { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 3px; }
 
 /* 의사코드: 이 쪽에서 밟지 않는 줄은 흐리게 */
@@ -379,3 +357,50 @@
 /* 문제 보기·단계 쪽 배치 — 실행 제어가 없는 문제 보기 쪽은 그림과 데이터를 크게 */
 body:not(.show-controls) .controlbar,
 body:not(.show-controls) .actionbar { display: none; }
+
+/* ───────────── 집중 보기 (단계 쪽) ─────────────
+   한 쪽 = 의사코드 몇 줄 + 그 줄의 계산 + 바뀐 상자. 바뀌지 않은 상자는 흐리게. */
+.sbox { transition: opacity .25s ease, filter .25s ease; }
+.sbox.is-quiet { opacity: .42; filter: saturate(.5); }
+.sbox.is-quiet:hover { opacity: .85; filter: none; }
+
+/* 이 쪽의 줄만 보이니 글자를 키운다 */
+body.show-controls .pseudo { gap: 4px; }
+body.show-controls .pseudo__row:not(.is-off) { padding: 6px var(--sp-2); }
+body.show-controls .pseudo__row:not(.is-off) .pseudo__code { font-size: var(--fs-md); }
+body.show-controls .pseudo__row:not(.is-off) .pseudo__no { font-size: var(--fs-sm); }
+body.show-controls .pseudo--long { gap: 1px; }
+body.show-controls .pseudo--long .pseudo__row:not(.is-off) { padding: 2px var(--sp-2); }
+body.show-controls .pseudo--long .pseudo__row:not(.is-off) .pseudo__code { font-size: var(--fs-sm); }
+.pseudo__row.is-next { border: 1.5px dashed var(--current); background: var(--surface); }
+.pseudo__badge {
+  grid-column: 2; justify-self: start; margin-top: 3px;
+  font-size: var(--fs-xs); font-weight: 700; color: #fff; background: var(--current);
+  padding: 1px 8px; border-radius: 999px; animation: next-pulse 1.4s ease-in-out infinite;
+}
+.panel__toggle { font-size: var(--fs-xs); }
+.codepanel .calc { font-size: var(--fs-sm); }
+.codepanel .calc__rows { font-size: var(--fs-sm); gap: 3px; }
+
+/* 실행 전 모습 */
+.action-card--ready { border-style: dashed; background: var(--surface); }
+.action-card--ready .action-card__word { color: var(--text-muted); }
+
+/* 레슨 막대: 단계 쪽은 제목 + 한 문장을 한 줄로 */
+.lesson--brief .lesson__text { display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap; }
+.lesson--brief .lesson__goal { margin: 0; font-size: var(--fs-md); }
+
+/* 그림이 필요 없는 쪽(트리의 문제 보기·뿌리 만들기 전)은 그림 칸을 접는다 */
+.workspace[data-nostage],
+.workspace[data-stage="none"] { grid-template-areas: "code data" "code data"; }
+.workspace[data-nostage] .panel--stage,
+.workspace[data-stage="none"] .panel--stage { display: none; }
+@media (max-width: 900px) {
+  .workspace[data-nostage],
+  .workspace[data-stage="none"] { grid-template-areas: "data" "code"; }
+}
+
+/* 칸이 넉넉해졌으니 표 글자를 키운다 */
+body.show-controls .dataflow .dtable,
+.workspace[data-kind="intro"] .dtable { font-size: var(--fs-sm); }
+body.show-controls .dataflow .dtable th, body.show-controls .dataflow .dtable td { padding: 1px 8px; }

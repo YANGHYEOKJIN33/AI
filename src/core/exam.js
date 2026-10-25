@@ -375,7 +375,7 @@ const POOLS = {
       q: `1회차가 끝나고 계산한 새 중심 ${clusterName(ci)}의 좌표는?`,
       ...choice(r, right, [pt(h1.start[ci]), pt(h1.next[(ci + 1) % k]), `(${fmt(h1.next[ci].y)}, ${fmt(h1.next[ci].x)})`, pt(final.next[ci])]),
       why: `묶음 ${clusterName(ci)} = {${setText(h1.assign, ci)}}의 x 평균, y 평균 → ${right}`,
-      jump: { page: 'update', frame: firstIndex(fr, (f) => f.action === 'mean' && f.iter === 1) } });
+      jump: { page: 'mean', frame: firstIndex(fr, (f) => f.action === 'mean' && f.iter === 1) } });
 
     qs.push({ kind: 'order',
       q: '몇 번째 반복(회차)에서 "새 중심 = 중심"이 되어 멈추는가?',
@@ -416,7 +416,7 @@ const POOLS = {
       q: '첫 에폭의 기울기 dw = 2 × (오차·x)의 평균은?',
       ...choice(r, '−39.2', ['39.2', '−19.6', '−98', '−10.8']),
       why: '오차·x = −2, −8, −15, −28, −45 → 합 −98, 평균 −19.6, × 2 = −39.2',
-      jump: { page: 'loss', frame: f1('gradient') } });
+      jump: { page: 'grad', frame: f1('gradient') } });
     const w1 = lr * 39.2;
     qs.push({ kind: 'order',
       q: `학습률 ${lr}일 때 첫 에폭 갱신 뒤 w는?`,
@@ -433,13 +433,13 @@ const POOLS = {
       q: `학습률 ${lr}일 때 두 번째 에폭의 손실은 첫 번째(35)보다?`,
       ...choice(r, h[1] < h[0] ? '줄어든다' : '커진다', ['줄어든다', '커진다', '똑같다']),
       why: `두 번째 에폭 손실 = ${fmt(h[1])}${h[1] > h[0] ? ' — 학습률이 너무 커서 골짜기를 넘어갔어요(발산)' : ''}`,
-      jump: { page: 'update', frame: firstIndex(fr, (f) => f.iter === 2 && f.action === 'loss') } });
+      jump: { page: 'repeat', frame: firstIndex(fr, (f) => f.iter === 2 && f.action === 'loss') } });
     const p2 = w1 * 1 + b1;
     qs.push({ kind: 'order',
       q: `학습률 ${lr}일 때 두 번째 에폭에서 x = 1의 예측값은?`,
       ...choice(r, fmt(p2), [fmt(w1), fmt(b1), fmt(w1 - b1), '0']),
       why: `예측 = w × 1 + b = ${fmt(w1)} + ${fmt(b1)} = ${fmt(p2)}`,
-      jump: { page: 'update', frame: firstIndex(fr, (f) => f.iter === 2 && f.action === 'predict') } });
+      jump: { page: 'repeat', frame: firstIndex(fr, (f) => f.iter === 2 && f.action === 'predict') } });
     return qs;
   },
 
@@ -451,6 +451,9 @@ const POOLS = {
     const nodes = fr.at(-1).ds.nodes;
     const root = nodes[run.result.root];
     const qs = [];
+    // 단계 쪽: ② 첫 특징(날씨) 나누기 · ③ 나머지 특징과 고르기 · ④ 첫 가지 · ⑤ 나머지 가지
+    const secondBranch = fr.map((g, i) => (g.action === 'branch' && g.ds.stack.length === 1 ? i : -1)).filter((i) => i >= 0)[1] ?? fr.length;
+    const growPage = (i) => (i < secondBranch ? 'grow' : 'finish');
 
     const f = pick(r, PLAY_FEATURES);
     const bin = pick(r, binsOf(PLAY_DAYS, f));
@@ -459,21 +462,21 @@ const POOLS = {
       q: `뿌리에서 "${f}"로 나눴을 때 "${bin.value}" 묶음(${bin.n}개: 한다 ${bin.counts['한다']}, 안 한다 ${bin.counts['안 한다']})의 ${name}는?`,
       ...choice(r, fmt(imp(bin.counts), 3), [...others, fmt(1 - imp(bin.counts), 3), fmt(bin.counts['한다'] / bin.n, 3), '0']),
       why: crit === 'entropy' ? '엔트로피 = −Σ p·log₂p' : `1 − (${bin.counts['한다']}/${bin.n})² − (${bin.counts['안 한다']}/${bin.n})²`,
-      jump: { page: 'root', frame: firstIndex(fr, (g) => g.action === 'score' && g.ds.cur === run.result.root && g.ds.groups?.feature === f) } });
+      jump: { page: f === PLAY_FEATURES[0] ? 'split' : 'choose', frame: firstIndex(fr, (g) => g.action === 'score' && g.ds.cur === run.result.root && g.ds.groups?.feature === f) } });
 
     const scores = PLAY_FEATURES.map((g) => [g, binsOf(PLAY_DAYS, g).reduce((s, b) => s + (b.n / 14) * imp(b.counts), 0)]);
     qs.push({ kind: 'result',
       q: `뿌리 노드의 질문으로 선택되는 특징은? (${name} 기준)`,
       ...choice(r, root.feature, PLAY_FEATURES),
       why: scores.map(([g, s]) => `${g} ${fmt(s, 3)}`).join(', ') + ' → 가장 작은 것',
-      jump: { page: 'root', frame: firstIndex(fr, (g) => g.action === 'choose') } });
+      jump: { page: 'choose', frame: firstIndex(fr, (g) => g.action === 'choose') } });
 
     const worst = scores.reduce((a, b) => (b[1] > a[1] ? b : a));
     qs.push({ kind: 'calc',
       q: `뿌리에서 가중 평균 점수가 가장 큰(데이터를 가장 덜 깨끗하게 나누는) 특징은?`,
       ...choice(r, worst[0], PLAY_FEATURES),
       why: scores.map(([g, s]) => `${g} ${fmt(s, 3)}`).join(', '),
-      jump: { page: 'root', frame: firstIndex(fr, (g) => g.action === 'choose') } });
+      jump: { page: 'choose', frame: firstIndex(fr, (g) => g.action === 'choose') } });
 
     const callFrames = fr.filter((g) => g.action === 'call');
     const splitsInOrder = callFrames.map((g) => nodes[g.ds.cur]).filter((nd) => nd.kind === 'split');
@@ -483,7 +486,7 @@ const POOLS = {
         q: '두 번째로 만들어지는 질문 노드의 특징은?',
         ...choice(r, second.feature, PLAY_FEATURES.filter((g) => g !== root.feature).concat([root.feature])),
         why: `뿌리(${root.feature}) 다음, 값 순서대로 처음 내려간 "${second.edge}" 가지가 섞여 있어 "${second.feature}"로 나눠요.`,
-        jump: { page: 'grow', frame: firstIndex(fr, (g) => g.action === 'node' && g.ds.cur === second.id) } });
+        jump: (() => { const i = firstIndex(fr, (g) => g.action === 'node' && g.ds.cur === second.id); return { page: growPage(i), frame: i }; })() });
     }
 
     const leavesInOrder = callFrames.map((g) => nodes[g.ds.cur]).filter((nd) => nd.kind === 'leaf');
@@ -493,20 +496,20 @@ const POOLS = {
       q: `${ord(li)}로 만들어지는 잎 노드는 어떤 조건의 잎인가?`,
       ...choice(r, `${pathText(nodes, leaf.id)} → ${leaf.label}`, leavesInOrder.map((l) => `${pathText(nodes, l.id)} → ${l.label}`)),
       why: `잎이 만들어지는 순서: ${leavesInOrder.map((l, i) => `${i + 1}) ${pathText(nodes, l.id)}`).join(' ')}`,
-      jump: { page: 'grow', frame: firstIndex(fr, (g) => (g.action === 'leaf') && g.ds.cur === leaf.id) } });
+      jump: (() => { const i = firstIndex(fr, (g) => g.action === 'leaf' && g.ds.cur === leaf.id); return { page: growPage(i), frame: i }; })() });
 
     const maxStack = Math.max(...fr.map((g) => g.ds.stack.length));
     qs.push({ kind: 'order',
       q: '트리를 만드는 동안 호출 스택이 가장 높이 쌓였을 때 몇 칸인가?',
       ...choice(r, `${maxStack}칸`, ['1칸', '2칸', '3칸', '4칸', '5칸']),
       why: '뿌리 호출(1칸) → 가지로 재귀(2칸) → 그 아래 가지(3칸)… 트리 깊이 + 1만큼 쌓여요.',
-      jump: { page: 'grow', frame: firstIndex(fr, (g) => g.ds.stack.length === maxStack) } });
+      jump: (() => { const i = firstIndex(fr, (g) => g.ds.stack.length === maxStack); return { page: growPage(i), frame: i }; })() });
 
     qs.push({ kind: 'order',
       q: '트리만들기 함수는 모두 몇 번 호출되는가? (= 만들어지는 노드 수)',
       ...choice(r, `${callFrames.length}번`, [`${callFrames.length - 1}번`, `${callFrames.length + 1}번`, `${Object.values(nodes).filter((nd) => nd.kind === 'leaf').length}번`, '14번']),
       why: `질문 노드 ${splitsInOrder.length}개 + 잎 노드 ${leavesInOrder.length}개 = ${callFrames.length}`,
-      jump: { page: 'grow', frame: fr.length - 1 } });
+      jump: { page: 'finish', frame: fr.length - 1 } });
 
     const day = { 날씨: pick(r, PLAY_VALUES.날씨), 기온: pick(r, PLAY_VALUES.기온), 습도: pick(r, PLAY_VALUES.습도), 바람: pick(r, PLAY_VALUES.바람) };
     const pred = treeClassify(nodes, run.result.root, day);
@@ -514,7 +517,7 @@ const POOLS = {
       q: `완성된 트리로 (${PLAY_FEATURES.map((g) => `${g} ${day[g]}`).join(', ')})인 날을 예측하면?`,
       ...choice(r, pred.label, ['한다', '안 한다']),
       why: `지나가는 길: ${pred.path.map((id) => nodes[id]).map((nd) => (nd.kind === 'leaf' ? nd.label : `${nd.feature}=${day[nd.feature]}`)).join(' → ')}`,
-      jump: { page: 'grow', frame: fr.length - 1 } });
+      jump: { page: 'finish', frame: fr.length - 1 } });
     return qs;
   },
 };

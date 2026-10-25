@@ -7,10 +7,9 @@ import { createFlip } from './flip.js';
 import { currentStep } from '../app/lesson.js';
 
 export function mountDataPanel(root, store, player, views) {
-  const hint = el('span.panel__hint', {}, '방금 바뀐 상자가 파랗게 빛나요');
   const body = el('div.panel__body.dataflow');
   fill(root,
-    el('div.panel__head', {}, el('span.panel__title', {}, '자료구조'), hint),
+    el('div.panel__head', {}, el('span.panel__title', {}, '자료구조')),
     body,
   );
   const flip = createFlip();
@@ -29,6 +28,8 @@ export function mountDataPanel(root, store, player, views) {
     // 이 쪽에 필요한 상자만 — 문제 보기 쪽은 입력 데이터 하나만
     const boxes = step.kind === 'intro' ? view.introBoxes : step.boxes;
     fill(body, view.data(v, { store, player, state, page: step.id, kind: step.kind, boxes: new Set(boxes) }));
+    // 바뀐 상자가 이 쪽에 안 보이면(다른 쪽 상자만 바뀐 장면) 흐리게 하지 않는다
+    if (!body.querySelector('.sbox.is-hot')) body.querySelectorAll('.sbox.is-quiet').forEach((b) => b.classList.remove('is-quiet'));
     flip(body, { reset });
   }
 

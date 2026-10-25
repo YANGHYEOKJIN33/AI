@@ -47,8 +47,12 @@ export function mountLessonBar(root, store) {
     }
     const step = steps[index];
     title.textContent = `${index + 1}. ${step.title}`;
-    goal.textContent = `📘 배울 것 — ${step.goal}`;
-    todo.textContent = `✋ 해 볼 것 — ${step.todo}`;
+    // 알고리즘 단계 쪽은 한 문장만 — 할 일은 깜빡이는 ⏭ 단추가 알려 준다
+    const brief = state.mode === 'algo' && step.kind === 'step';
+    goal.textContent = brief ? step.goal : `📘 배울 것 — ${step.goal}`;
+    todo.textContent = brief || !step.todo ? '' : `✋ 해 볼 것 — ${step.todo}`;
+    todo.hidden = !todo.textContent;
+    root.classList.toggle('lesson--brief', brief);
     count.textContent = `${index + 1} / ${steps.length}`;
     prev.disabled = index === 0;
     const last = index === steps.length - 1;

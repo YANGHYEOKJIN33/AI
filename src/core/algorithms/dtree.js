@@ -240,7 +240,6 @@ export function run(params = defaults) {
           rows: [
             ...bins.map((b) => `${b.value}: ${impText(b.counts)}`),
             `가중 평균 = ${bins.map((b) => `${b.rows.length}/${n}×${fmt(b.imp, 3)}`).join(' + ')} = ${fmt(score, 3)}`,
-            `정보 이득 = ${fmt(parentImp, 3)} − ${fmt(score, 3)} = ${fmt(parentImp - score, 3)}`,
           ],
         },
       });
@@ -255,7 +254,7 @@ export function run(params = defaults) {
       effects: [{ target: 'scores', op: 'min' }],
       narration: `점수가 가장 작은 "${best.feature}"(${fmt(best.score, 3)})를 고릅니다. 가장 깨끗하게 나누는 질문이에요.`,
       calc: {
-        title: '🏅 best = min(score, key=score.get)',
+        title: '🏅 best = 점수가 가장 작은 특징',
         rows: ds.scores.map((s) => `${s.feature}: ${fmt(s.score, 3)}${s.feature === best.feature ? '  ← 가장 작음' : ''}`),
       },
       ask: depth <= 1 ? {

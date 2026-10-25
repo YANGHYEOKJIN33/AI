@@ -1,8 +1,8 @@
 /**
  * 레슨(쪽) 구성 — 큰 탭 셋마다 쪽 묶음이 다르다. (8-퍼즐 사이트의 lesson.js와 같은 원칙)
  *
- *  - 한 쪽 = 배울 것 하나. 📘 배울 것(왜 그런지까지) + ✋ 해 볼 것.
- *  - 알고리즘 탭은 하위 탭(알고리즘)마다 같은 3쪽 템플릿을 쓰고, 문구만 알고리즘에 따라 갈린다.
+ *  - 한 쪽 = 배울 것 하나. 📘 배울 것 + ✋ 해 볼 것 (알고리즘 단계 쪽은 한 문장만 — 시선을 그림과 자료구조에).
+ *  - 알고리즘 탭은 문제 보기 → 단계 쪽(줄마다) → 추적표 → 시험 대비 연습.
  *
  *  view : 'room' — 화면 전체를 쓰는 방(자료구조 도구·정리)
  *         'workspace' — 코드 | 그림 / 자료구조 3분할 (알고리즘 쪽)
@@ -30,14 +30,27 @@ export const TOOLS = [
 
 /* ══════════════════════════ 🤖 알고리즘 ══════════════════════════ */
 /**
- * 알고리즘마다 쪽을 잘게 나눈다 — 한 쪽에는 절차 하나, 그 절차가 바꾸는 자료구조만 보인다.
+ * 알고리즘마다 쪽을 잘게 나눈다 — 한 쪽 = 의사코드 한 줄(또는 붙어 있는 몇 줄) = 바뀌는 자료구조 하나.
  *
- *  kind  : 'intro' 문제 보기 | 'step' 의사코드 한 단계씩 | 'trace' 추적표 | 'exam' 시험 대비 연습
- *  lines : 이 쪽에서 밟는 의사코드 줄 [처음, 끝] — 나머지 줄은 흐리게 접는다
+ *  kind    : 'intro' 문제 보기 | 'step' 의사코드 한 단계씩 | 'trace' 추적표 | 'exam' 시험 대비 연습
+ *  goal    : 단계 쪽은 한 문장만 (화면 위 한 줄)
+ *  lines   : 이 쪽에서 밟는 의사코드 줄 [처음, 끝] — 이 줄만 보인다
  *  window(frame, index, frames) : 이 쪽에서 재생할 장면 (재생기가 이 범위만 오간다)
- *  boxes : 자료구조 패널에 보일 상자
+ *  boxes   : 자료구조 패널에 보일 상자
+ *  iterNav : ⏭⏭ 다음 반복 단추를 보일까 (반복을 넘겨 보는 쪽에서만)
+ *  stage   : 'none'이면 그림 칸을 접고 자료구조 칸을 키운다 (그림이 바뀌지 않는 쪽 — 트리 뿌리를 만들기 전)
+ *
+ * 단계 쪽은 "실행 전 모습"(바로 앞 장면)에서 시작한다 — ⏭를 누르면 이 줄이 무엇을 바꾸는지 전후가 보인다.
  */
-const firstNode = (fr) => fr.findIndex((g) => g.action === 'node');
+const firstIdx = (fr, pred) => fr.findIndex(pred);
+/** 의사결정트리: 뿌리에서 뻗는 가지 장면들 (스택에 뿌리 호출 하나만 있을 때) */
+const rootBranches = (fr) => fr.map((g, i) => (g.action === 'branch' && g.ds.stack.length === 1 ? i : -1)).filter((i) => i >= 0);
+const dt = {
+  firstLoop: (fr) => firstIdx(fr, (g) => g.action === 'loop'),
+  firstScore: (fr) => firstIdx(fr, (g) => g.action === 'score'),
+  firstNode: (fr) => firstIdx(fr, (g) => g.action === 'node'),
+  secondBranch: (fr) => rootBranches(fr)[1] ?? fr.length,
+};
 
 const TRACE_PAGE = {
   id: 'trace', kind: 'trace', title: '추적표로 정리',
@@ -54,58 +67,63 @@ export const ALGO_PAGES = {
   knn: [
     { id: 'intro', kind: 'intro', title: '문제 보기',
       goal: '토마토(단맛 6, 아삭함 4)는 과일·채소·단백질 중 무엇과 닮았을까요? 가장 가까운 학습 데이터 k개가 투표해서 정해요.',
-      todo: '① 왼쪽에서 오늘 따라갈 순서 세 가지를 읽고 ② 그림과 표에서 학습 데이터 9개를 확인한 뒤 [다음 →]을 누르세요.' },
+      todo: '왼쪽에서 문제와 시험 포인트를 읽고, 학습 데이터 9개를 확인한 뒤 [다음 →]을 누르세요.' },
     { id: 'dist', kind: 'step', title: '① 거리 재기', lines: [1, 4], window: (f) => f.phase === 0, boxes: ['train', 'distances'],
-      goal: '학습 데이터를 표의 위에서부터 하나씩 꺼내 거리를 재고, (거리, 레이블)을 distances 리스트 뒤에 추가해요.',
-      todo: '⏭ 한 단계(→)를 누르며 ① 표의 파란 줄 ② 계산 상자의 d² ③ distances에 한 칸씩 붙는 순서를 보세요.' },
-    { id: 'sort', kind: 'step', title: '② 정렬하고 k개 고르기', lines: [5, 6], window: (f) => f.phase === 1 || f.phase === 2, boxes: ['distances', 'neighbors'],
-      goal: 'distances를 거리가 작은 순서로 정렬하면, 앞에서 k개를 자르는 것만으로 "가장 가까운 k개"가 돼요.',
-      todo: '① 🔮 퀴즈로 0번 자리를 먼저 맞히고 ② ⏭로 정렬되는 모습 ③ 앞 3개가 이웃으로 복사되는 모습을 보세요.' },
-    { id: 'vote', kind: 'step', title: '③ 투표하기', lines: [7, 9], window: (f) => f.phase === 3, boxes: ['neighbors', 'votes'],
-      goal: '이웃의 레이블을 딕셔너리로 세어(투표), 가장 많은 레이블을 예측으로 돌려줘요.',
-      todo: '⏭를 누를 때마다 이웃 하나의 표가 votes로 들어가요. 새 키가 생기는지, 값이 1 느는지 구분해 보세요.' },
+      goal: '표의 위에서부터 토마토까지의 거리를 재서 distances 뒤에 붙여요.' },
+    { id: 'sort', kind: 'step', title: '② 정렬하기', lines: [5, 5], window: (f) => f.phase === 1, boxes: ['distances'],
+      goal: 'distances를 거리가 작은 순서로 다시 세워요.' },
+    { id: 'slice', kind: 'step', title: '③ 앞에서 k개 고르기', lines: [6, 6], window: (f) => f.phase === 2, boxes: ['distances', 'neighbors'],
+      goal: '정렬된 distances의 앞에서 k개를 이웃으로 복사해요.' },
+    { id: 'vote', kind: 'step', title: '④ 투표하기', lines: [7, 9], window: (f) => f.phase === 3, boxes: ['neighbors', 'votes'],
+      goal: '이웃의 레이블을 votes 딕셔너리로 세고, 가장 많은 레이블이 답이에요.' },
     TRACE_PAGE, EXAM_PAGE,
   ],
   kmeans: [
     { id: 'intro', kind: 'intro', title: '문제 보기',
       goal: '집 6채를 가까운 것끼리 두 묶음으로 나눠 배달 거점 2곳을 정해요. 정답 레이블은 없어요(비지도학습).',
-      todo: '① 왼쪽에서 따라갈 순서를 읽고 ② 그림에서 집 6채와 시작 중심(◆)을 확인한 뒤 [다음 →]을 누르세요.' },
-    { id: 'assign', kind: 'step', title: '① 1회차 할당', lines: [1, 6], window: (f) => f.iter <= 1 && f.line <= 6, boxes: ['pool', 'clusters', 'centroids'],
-      goal: '집1부터 차례로, 가장 가까운 중심(d²이 가장 작은 중심)의 묶음 리스트에 넣어요.',
-      todo: '⏭를 누르며 ① 계산 상자의 d² 두 개를 비교하고 ② 집이 대기 줄에서 묶음으로 옮겨 가는 것을 보세요.' },
-    { id: 'update', kind: 'step', title: '② 1회차 갱신·수렴 판정', lines: [7, 9], window: (f) => f.iter === 1 && f.line >= 7, boxes: ['clusters', 'newCentroids', 'centroids'],
-      goal: '묶음마다 평균을 내어 새 중심을 구하고, 지금 중심과 같은지 비교해요. 다르면 중심을 바꾸고 다시 반복해요.',
-      todo: '⏭를 누르며 ① 평균 계산 ② "새 중심 = 중심?" 판단 ③ 그림에서 ◆가 옮겨 가는 것을 보세요.' },
-    { id: 'repeat', kind: 'step', title: '③ 반복해서 수렴까지', lines: [2, 10], window: (f) => f.iter >= 2, boxes: ['pool', 'clusters', 'newCentroids', 'centroids'],
-      goal: '같은 과정을 되풀이해요. 묶음이 바뀌는 집이 있으면 중심도 움직이고, 더 바뀌지 않으면 멈춰요(수렴).',
-      todo: '⏭⏭ 다음 반복(PageDown)으로 회차를 넘기며 ① 묶음을 옮기는 집(점선 칩) ② 몇 회차에 멈추는지 세어 보세요.' },
+      todo: '왼쪽에서 문제와 시험 포인트를 읽고, 그림에서 집 6채와 시작 중심(◆)을 확인한 뒤 [다음 →]을 누르세요.' },
+    { id: 'assign', kind: 'step', title: '① 묶음에 나누기 (1회차)', lines: [1, 6], window: (f) => f.iter <= 1 && f.line <= 6, boxes: ['pool', 'clusters', 'centroids'],
+      goal: '집마다 가장 가까운 중심(d²이 가장 작은 중심)의 묶음에 넣어요.' },
+    { id: 'mean', kind: 'step', title: '② 새 중심 구하기', lines: [7, 7], window: (f) => f.iter === 1 && f.line === 7, boxes: ['clusters', 'newCentroids'],
+      goal: '묶음마다 점들의 평균을 내면 새 중심이에요.' },
+    { id: 'update', kind: 'step', title: '③ 비교하고 중심 바꾸기', lines: [8, 9], window: (f) => f.iter === 1 && f.line >= 8, boxes: ['newCentroids', 'centroids'],
+      goal: '새 중심이 지금 중심과 다르면 중심을 새 중심으로 바꾸고 다시 반복해요.' },
+    { id: 'repeat', kind: 'step', title: '④ 수렴할 때까지 반복', lines: [2, 10], window: (f) => f.iter >= 2, boxes: ['pool', 'clusters', 'centroids', 'iter'], iterNav: true,
+      goal: '⏭⏭로 회차를 넘기며, 묶음을 옮기는 집과 멈추는 회차를 찾아요.' },
     TRACE_PAGE, EXAM_PAGE,
   ],
   linreg: [
     { id: 'intro', kind: 'intro', title: '문제 보기',
       goal: '공부 시간(x)으로 퀴즈 점수(y)를 예측하는 직선 y = wx + b를 찾아요. w = 0, b = 0에서 시작해 조금씩 고쳐 가요(경사하강법).',
-      todo: '① 왼쪽에서 따라갈 순서를 읽고 ② 표와 그림에서 데이터 5개를 확인한 뒤 [다음 →]을 누르세요.' },
-    { id: 'predict', kind: 'step', title: '① 예측과 오차', lines: [1, 4], window: (f) => f.iter <= 1 && f.line <= 4, boxes: ['table', 'vars'],
-      goal: '지금의 w, b로 모든 x의 예측값을 계산하고, 예측 − 실제로 오차를 구해요.',
-      todo: '⏭를 누르며 ① 예측 열 ② 오차 열이 위에서 아래로 채워지는 것과 그림의 빨간 오차 막대를 보세요.' },
-    { id: 'loss', kind: 'step', title: '② 손실과 기울기', lines: [5, 6], window: (f) => f.iter === 1 && (f.line === 5 || f.line === 6), boxes: ['table', 'vars'],
-      goal: '오차²의 평균이 손실(MSE), 오차를 x와 곱해 평균 낸 것의 2배가 기울기 dw예요. 첫 에폭은 손으로 계산할 수 있어요.',
-      todo: '① 계산 상자를 보기 전에 손실(35)을 직접 계산해 보고 ② ⏭로 확인하세요. dw의 부호도 확인하세요.' },
-    { id: 'update', kind: 'step', title: '③ 갱신하고 반복하기', lines: [7, 9], window: (f) => (f.iter === 1 && f.line >= 7) || f.iter >= 2, boxes: ['vars', 'history'],
-      goal: 'w ← w − 학습률 × dw 로 고치고 손실을 기록해요. 이것을 에폭마다 되풀이하면 손실이 줄어들어요.',
-      todo: '① ⏭로 첫 갱신(w 0 → 1.96)을 보고 ② ⏭⏭ 다음 에폭으로 손실 기록이 줄어드는 것을 보세요.' },
+      todo: '왼쪽에서 문제와 시험 포인트를 읽고, 표와 그림에서 데이터 5개를 확인한 뒤 [다음 →]을 누르세요.' },
+    { id: 'predict', kind: 'step', title: '① 예측', lines: [1, 3], window: (f) => f.iter <= 1 && f.line <= 3, boxes: ['table', 'vars'],
+      goal: 'w = 0, b = 0에서 시작해, 지금 직선으로 x마다 예측값을 구해요.' },
+    { id: 'error', kind: 'step', title: '② 오차', lines: [4, 4], window: (f) => f.iter === 1 && f.line === 4, boxes: ['table'],
+      goal: '오차 = 예측 − 실제. 그림의 세로 막대가 오차예요.' },
+    { id: 'loss', kind: 'step', title: '③ 손실', lines: [5, 5], window: (f) => f.iter === 1 && f.line === 5, boxes: ['table', 'vars'],
+      goal: '오차를 제곱해서 평균 내면 손실(MSE)이에요.' },
+    { id: 'grad', kind: 'step', title: '④ 기울기', lines: [6, 6], window: (f) => f.iter === 1 && f.line === 6, boxes: ['table', 'vars'],
+      goal: '오차와 x로 기울기 dw, db를 구해요. 부호가 고칠 방향을 알려 줘요.' },
+    { id: 'update', kind: 'step', title: '⑤ 갱신', lines: [7, 7], window: (f) => f.iter === 1 && f.line === 7, boxes: ['vars'],
+      goal: 'w ← w − 학습률 × dw. 직선이 어떻게 움직이는지 보세요.' },
+    { id: 'repeat', kind: 'step', title: '⑥ 기록하고 반복', lines: [2, 9], window: (f) => (f.iter === 1 && f.line === 8) || f.iter >= 2, boxes: ['vars', 'history'], iterNav: true,
+      goal: '손실을 기록에 붙이고, ⏭⏭로 에폭을 넘기며 손실이 줄어드는지 봐요.' },
     TRACE_PAGE, EXAM_PAGE,
   ],
   dtree: [
     { id: 'intro', kind: 'intro', title: '문제 보기',
       goal: '14일의 기록(날씨·기온·습도·바람 → 축구 한다/안 한다)으로 "질문 트리"를 만들어요. 섞인 정도(불순도)가 가장 작아지는 질문부터 골라요.',
-      todo: '① 왼쪽에서 따라갈 순서를 읽고 ② 표에서 14일의 기록을 확인한 뒤 [다음 →]을 누르세요.' },
-    { id: 'root', kind: 'step', title: '① 뿌리 질문 고르기', lines: [1, 8], window: (f, i, fr) => i <= firstNode(fr), boxes: ['counts', 'groups', 'scores'],
-      goal: '특징 네 개로 하나씩 나눠 보고, 묶음별 지니 불순도를 크기로 가중 평균한 점수가 가장 작은 특징을 뿌리 질문으로 골라요.',
-      todo: '⏭를 누르며 ① 행이 값별 묶음으로 옮겨 가는 것 ② 점수표에 한 줄씩 적히는 것 ③ 가장 작은 점수가 뽑히는 것을 보세요.' },
-    { id: 'grow', kind: 'step', title: '② 가지마다 다시 만들기 (재귀)', lines: [1, 10], window: (f, i, fr) => i > firstNode(fr), boxes: ['stack', 'groups', 'scores'],
-      goal: '값마다 가지를 뻗고 그 묶음으로 같은 함수를 다시 불러요(재귀). 부를 때 호출 스택에 쌓이고, 끝나면 빠져요.',
-      todo: '⏭⏭ 다음 노드(PageDown)로 넘기며 ① 노드가 만들어지는 순서 ② 호출 스택 칸 수 ③ 잎이 되는 조건을 보세요.' },
+      todo: '왼쪽에서 문제와 시험 포인트를 읽고, 표에서 14일의 기록을 확인한 뒤 [다음 →]을 누르세요.' },
+    { id: 'count', kind: 'step', stage: 'none', title: '① 레이블 세기', lines: [1, 3], window: (f, i, fr) => i < dt.firstLoop(fr), boxes: ['stack', 'counts'],
+      goal: '함수를 부르면 스택에 쌓이고, 먼저 레이블을 세어 잎인지 확인해요.' },
+    { id: 'split', kind: 'step', stage: 'none', title: '② 나누고 점수 매기기', lines: [4, 6], window: (f, i, fr) => i >= dt.firstLoop(fr) && i <= dt.firstScore(fr), boxes: ['groups', 'scores'],
+      goal: '"날씨"로 행을 나누고, 묶음별 불순도를 크기로 가중 평균해 점수표에 적어요.' },
+    { id: 'choose', kind: 'step', title: '③ 질문 고르기', lines: [5, 8], window: (f, i, fr) => i > dt.firstScore(fr) && i <= dt.firstNode(fr), boxes: ['groups', 'scores'],
+      goal: '나머지 특징도 점수를 매기고, 가장 작은 점수의 특징을 질문으로 골라요.' },
+    { id: 'grow', kind: 'step', title: '④ 첫 가지 만들기 (재귀)', lines: [1, 10], window: (f, i, fr) => i > dt.firstNode(fr) && i < dt.secondBranch(fr), boxes: ['stack', 'counts'], iterNav: true,
+      goal: '첫 가지로 같은 함수를 다시 불러요. 스택이 쌓이고 빠지는 것을 보세요.' },
+    { id: 'finish', kind: 'step', title: '⑤ 나머지 가지와 완성', lines: [1, 10], window: (f, i, fr) => i >= dt.secondBranch(fr), boxes: ['stack', 'counts'], iterNav: true,
+      goal: '남은 가지도 같은 방법으로 만들어 트리를 완성해요. 노드가 생기는 순서를 세어 보세요.' },
     TRACE_PAGE, EXAM_PAGE,
   ],
 };
@@ -114,14 +132,34 @@ export function algoPages(algoId) {
   return ALGO_PAGES[algoId] ?? ALGO_PAGES.knn;
 }
 
-/** 쪽의 장면 범위 [처음, 끝] — 없으면 전체 */
-export function pageWindow(page, frames) {
-  if (!page || !frames?.length) return [0, Math.max(0, (frames?.length ?? 1) - 1)];
-  if (page.kind === 'intro') return [0, 0];
-  if (!page.window) return [0, frames.length - 1];
+/** 쪽이 실제로 밟는 장면 [처음, 끝] — 없으면 null */
+function ownRange(page, frames) {
   let lo = -1; let hi = -1;
   frames.forEach((f, i) => { if (page.window(f, i, frames)) { if (lo < 0) lo = i; hi = i; } });
-  return lo < 0 ? [0, frames.length - 1] : [lo, hi];
+  return lo < 0 ? null : [lo, hi];
+}
+
+/**
+ * 쪽의 장면 범위 [처음, 끝, 실행 전 모습에서 시작하나].
+ * 단계 쪽은 바로 앞 장면(= 이 줄을 실행하기 전 모습)을 처음으로 둔다.
+ */
+export function pageWindow(page, frames) {
+  if (!page || !frames?.length) return [0, Math.max(0, (frames?.length ?? 1) - 1), false];
+  if (page.kind === 'intro') return [0, 0, false];
+  if (!page.window) return [0, frames.length - 1, false];
+  const own = ownRange(page, frames);
+  if (!own) return [0, frames.length - 1, false];
+  const [lo, hi] = own;
+  return lo > 0 ? [lo - 1, hi, true] : [lo, hi, false];
+}
+
+/** 장면 하나가 어느 단계 쪽에 속하나 — "그 장면 보기"가 쓴다. 이름을 준 쪽에 있으면 그 쪽 */
+export function pageOfFrame(algoId, frames, index, prefer = null) {
+  const steps = algoPages(algoId).filter((p) => p.kind === 'step');
+  const has = (p) => { const r = ownRange(p, frames); return r && index >= r[0] && index <= r[1]; };
+  const preferred = steps.find((p) => p.id === prefer);
+  if (preferred && has(preferred)) return preferred.id;
+  return (steps.find(has) ?? steps[steps.length - 1]).id;
 }
 
 /** 알고리즘 하위 탭 */

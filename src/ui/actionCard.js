@@ -36,6 +36,7 @@ export const ACTION_VIS = {
   node:      { icon: '🌳', word: '질문 노드',  term: 'node',       plain: '트리에 질문 노드를 달아요.' },
   branch:    { icon: '↘', word: '가지',       term: 'branch',     plain: '값마다 가지를 뻗어 다시 트리를 만들러 가요.' },
   return:    { icon: '↩', word: '돌려주기',    term: 'return · pop', plain: '함수가 끝나 호출 스택에서 한 칸 빠져요.' },
+  ready:     { icon: '▶', word: '실행 전',     term: 'before',     plain: '이 쪽의 줄을 실행하기 전 모습이에요.' },
 };
 
 export function mountActionCard(root, store, player, coach) {
@@ -53,11 +54,14 @@ export function mountActionCard(root, store, player, coach) {
     }
     // 한 줄로 — 무엇을 했나(낱말) + 이 장면에서 실제로 일어난 일. 일반 설명은 마우스를 올리면 보인다.
     const vis = ACTION_VIS[v.frame.action] ?? { icon: '•', word: '진행', plain: '' };
-    fill(card, el('div.action-card', { 'data-action': v.frame.action, title: vis.plain },
+    const text = v.ready
+      ? `⏭ 한 단계를 누르면 ${v.next?.line ?? ''}줄이 실행돼요. 무엇이 바뀌는지 보세요.`
+      : v.frame.narration;
+    fill(card, el(`div.action-card${v.ready ? '.action-card--ready' : ''}`, { 'data-action': v.frame.action, title: vis.plain },
       el('div.action-card__icon', { 'aria-hidden': 'true' }, vis.icon),
       el('div.action-card__body', {},
         el('span.action-card__word', {}, vis.word),
-        el('span.action-card__detail', {}, v.frame.narration))));
+        el('span.action-card__detail', {}, text))));
   }
   player.subscribe(draw);
 }

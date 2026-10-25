@@ -20,7 +20,6 @@ function labelMark(label) {
 
 export default {
   stageTitle: '산점도 — 단맛 × 아삭함',
-  stageHint: '★ 질문점과 학습 데이터',
   targetName: (t) => TARGET_NAME[t] ?? t,
 
   intro: {
@@ -139,14 +138,14 @@ export default {
     const parts = [];
     const add = (box, arrow) => { if (parts.length && arrow) parts.push(flowArrow(arrow)); parts.push(box); };
     if (boxes.has('train')) add(sbox({ target: 'train', name: 'train', kind: '표', title: '학습 데이터', frame, cls: 'sbox--table' }, table));
-    if (boxes.has('distances')) add(sbox({ target: 'distances', name: 'distances', kind: '리스트', title: ds.sorted ? '거리 목록 (정렬됨 ✓)' : '거리 목록 (추가한 순서)', frame,
-      count: ds.distances.length, hint: '아직 비어 있음 — 1줄을 실행하면 생겨요', cls: 'sbox--list' }, dist), '거리 재서 추가');
-    if (boxes.has('neighbors')) add(sbox({ target: 'neighbors', name: '이웃', kind: '리스트', title: `가장 가까운 ${ds.k}개`, frame,
-      hint: '정렬한 뒤 앞에서 k개를 잘라 와요', cls: 'sbox--list' }, nbs), `앞 ${ds.k}개`);
+    if (boxes.has('distances')) add(sbox({ target: 'distances', name: 'distances', kind: '리스트', title: ds.sorted ? '정렬됨 ✓' : '추가한 순서', frame,
+      count: ds.distances.length, hint: '비어 있음', cls: 'sbox--list' }, dist), '추가');
+    if (boxes.has('neighbors')) add(sbox({ target: 'neighbors', name: '이웃', kind: '리스트', frame,
+      hint: '비어 있음', cls: 'sbox--list' }, nbs), `앞 ${ds.k}개`);
     if (boxes.has('votes')) {
       add(el('div.flow__col', {},
-        sbox({ target: 'votes', name: 'votes', kind: '딕셔너리', title: '레이블 → 표 수', frame,
-          hint: frame.line >= 7 ? '{ } 빈 딕셔너리' : '7줄에서 만들어요', cls: 'sbox--dict' }, votes),
+        sbox({ target: 'votes', name: 'votes', kind: '딕셔너리', frame,
+          hint: frame.line >= 7 ? '{ }' : '아직 없음', cls: 'sbox--dict' }, votes),
         resultBox ? sbox({ target: 'result', name: '결과', title: '예측', frame, cls: 'sbox--result' }, resultBox) : null), '레이블 세기');
     }
     return el('div.flow.flow--knn', {}, parts);

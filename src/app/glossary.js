@@ -93,7 +93,7 @@ export const GLOSSARY = [
       { term: '불순도', en: 'impurity', plain: '묶음에 레이블이 얼마나 섞였는지. 모두 같으면 0.', where: '트리 점수표' },
       { term: '지니 불순도', en: 'Gini impurity', plain: '1 − Σ(비율²). 반반 섞이면 0.5, 모두 같으면 0.', where: '트리 계산 상자' },
       { term: '엔트로피', en: 'entropy', plain: '−Σ p·log₂p. 섞인 정도를 재는 또 다른 방법. 반반이면 1.', where: '트리 추적표의 조건 바꾸기' },
-      { term: '정보 이득', en: 'information gain', plain: '나누기 전 불순도 − 나눈 뒤 불순도(가중 평균). 클수록 좋은 질문.', where: '트리 계산 상자' },
+      { term: '정보 이득', en: 'information gain', plain: '나누기 전 불순도 − 나눈 뒤 불순도(가중 평균). 클수록 좋은 질문. (점수가 가장 작은 특징 = 정보 이득이 가장 큰 특징)', where: '트리 ③ 질문 고르기' },
       { term: '재귀', en: 'recursion', plain: '함수가 자기 자신을 다시 부르는 것. 가지마다 같은 방법으로 트리를 만들어요.', where: '트리 9줄 · 호출 스택' },
       { term: '최대 깊이', en: 'max depth', plain: '트리가 내려갈 수 있는 한계. 너무 깊으면 학습 데이터에만 딱 맞는 과대적합이 생겨요.', where: '트리 추적표의 조건 바꾸기' },
       { term: '과대적합', en: 'overfitting', plain: '학습 데이터에 너무 딱 맞춰 새 데이터는 오히려 잘 못 맞히는 것.', where: '✅ 정리' },

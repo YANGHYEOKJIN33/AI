@@ -33,7 +33,9 @@ export function sbox(o, ...children) {
   const op = o.op ?? (o.frame ? hotOf(o.frame, o.target) : null);
   const items = children.flat(Infinity).filter(Boolean);
   const kindTerm = { 리스트: '리스트', 딕셔너리: '딕셔너리', 스택: '스택', 표: '2차원 리스트', 튜플: '튜플', 변수: '변수' }[o.kind];
-  return el(`section.sbox${op ? '.is-hot' : ''}${o.cls ? `.${o.cls}` : ''}`, { 'data-target': o.target },
+  // 이 장면에서 다른 상자가 바뀌었으면 이 상자는 흐리게 — 시선이 바뀐 곳으로 가게
+  const quiet = !op && o.frame && o.frame.effects.length > 0 && !o.keep;
+  return el(`section.sbox${op ? '.is-hot' : ''}${quiet ? '.is-quiet' : ''}${o.cls ? `.${o.cls}` : ''}`, { 'data-target': o.target },
     el('header.sbox__head', {},
       el('code.sbox__name', {}, o.name),
       o.kind ? el('span.sbox__kind', {}, kindTerm ? infoTerm(kindTerm, { label: o.kind }) : o.kind) : null,

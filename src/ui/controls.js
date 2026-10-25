@@ -4,6 +4,7 @@
  */
 import { el, fill } from './dom.js';
 import { SPEEDS } from '../app/state.js';
+import { currentStep } from '../app/lesson.js';
 
 const BUTTONS = [
   { id: 'reset', label: '⏹ 처음으로', key: 'Home' },
@@ -76,11 +77,15 @@ export function mountControls(root, store, player) {
     buttons.get('step').disabled = !ready || v.atEnd;
     buttons.get('end').disabled = !ready || v.atEnd;
     const jump = buttons.get('jump');
-    const label = ready ? v.algo.meta.jumpLabel : null;
+    // ⏭⏭은 반복을 넘겨 보는 쪽에서만 — 나머지 쪽은 ⏭ 하나로 충분하다
+    const page = currentStep(store.get());
+    const label = ready && page?.iterNav ? v.algo.meta.jumpLabel : null;
     jump.hidden = !label;
     if (label) { jump.textContent = `⏭⏭ ${label}`; jump.title = `${label}의 처음으로 (PageDown)`; }
     jump.disabled = !ready || v.atEnd;
     buttons.get('play').textContent = v.playing ? '⏸ 일시정지' : (ready && v.atEnd ? '↻ 다시 재생' : '▶ 재생');
+    // 쪽의 처음(실행 전 모습)에서는 ⏭가 깜빡여 "여기를 누르세요"를 알려 준다
+    buttons.get('step').classList.toggle('is-next', ready && v.atStart && !v.atEnd && !v.playing);
     // 이 쪽에서 밟는 장면만 센다
     const span = ready ? v.hi - v.lo + 1 : 1;
     const at = ready ? v.index - v.lo + 1 : 0;

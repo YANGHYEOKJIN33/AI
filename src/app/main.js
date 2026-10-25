@@ -3,7 +3,7 @@
  */
 import { createStore } from './state.js';
 import { createPlayer } from './player.js';
-import { currentStep, algoPages, pageWindow } from './lesson.js';
+import { currentStep, algoPages, pageWindow, pageOfFrame } from './lesson.js';
 import { normalizeParams } from '../core/algorithms/index.js';
 import { qs } from '../ui/dom.js';
 import { mountTopbar } from '../ui/topbar.js';
@@ -37,6 +37,11 @@ const coach = createCoach(store, player);
 function jump(algoId, pageId, frame = null, params = null) {
   if (params) store.setParams(algoId, normalizeParams(algoId, params));
   const pages = algoPages(algoId);
+  // 장면 번호를 주면 그 장면이 실제로 들어 있는 단계 쪽으로 간다
+  if (typeof frame === 'number' && frame >= 0) {
+    store.set({ mode: 'algo', algoTab: algoId });
+    pageId = pageOfFrame(algoId, player.frames(), frame, pageId);
+  }
   const algoStep = Math.max(0, pages.findIndex((p) => p.id === pageId));
   store.set({ mode: 'algo', algoTab: algoId, algoStep });
   // frame: 장면 번호, 또는 동작 이름(그 쪽에서 그 동작이 처음 나오는 장면)
@@ -70,6 +75,9 @@ store.subscribe((state) => {
   document.body.classList.toggle('show-controls', kind === 'step');
   qs('#workspace').dataset.page = page.id;
   qs('#workspace').dataset.kind = kind;
+  qs('#workspace').dataset.algo = state.algoTab;
+  if (page.stage) qs('#workspace').dataset.stage = page.stage; else delete qs('#workspace').dataset.stage;
+  qs('#workspace').toggleAttribute('data-nostage', kind === 'intro' && VIEWS[state.algoTab]?.introStage === false);
   if (state.mode !== 'algo') { player.pause(); lastPageKey = ''; return; }
 
   const runKey = `${state.algoTab}|${JSON.stringify(state.params[state.algoTab])}`;
@@ -78,8 +86,8 @@ store.subscribe((state) => {
   const pageKey = `${runKey}|${page.id}`;
   if (pageKey !== lastPageKey) {
     lastPageKey = pageKey;
-    const [lo, hi] = pageWindow(page, player.frames());
-    player.setWindow(lo, hi);
+    const [lo, hi, ready] = pageWindow(page, player.frames());
+    player.setWindow(lo, hi, { ready });
   }
 });
 

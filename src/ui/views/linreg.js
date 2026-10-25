@@ -49,7 +49,6 @@ function lossChart(history, { title = '📉 손실 기록 (history)' } = {}) {
 
 export default {
   stageTitle: '산점도 — 공부 시간 × 점수',
-  stageHint: '파란 직선 = 지금의 y = wx + b · 빨간 막대 = 오차',
   targetName: (t) => TARGET_NAME[t] ?? t,
 
   intro: {
@@ -107,9 +106,9 @@ export default {
       el('span.legend__item', {}, el('span.mark', { style: 'color:var(--cat-3)' }, '┃'), '오차(+)'));
   },
 
-  /** 손실 그래프는 갱신·반복 쪽에서만 */
+  /** 손실 그래프는 기록·반복 쪽에서만 */
   extra(v, { page }) {
-    return page === 'update' ? lossChart(v.ds.history) : null;
+    return page === 'repeat' ? lossChart(v.ds.history) : null;
   },
 
   data(v, { boxes, kind, page }) {
@@ -123,15 +122,15 @@ export default {
     };
     const sumOf = (arr) => (arr ? arr.reduce((s, x) => s + x, 0) : null);
 
-    // 쪽마다 필요한 열만 — 예측·오차 쪽은 pred·err, 손실·기울기 쪽은 err·err²·err·x
+    // 쪽마다 필요한 열만 — 그 줄이 채우는 열과, 그 열을 계산하는 데 쓰는 열
     const COLS = [
       { key: 'pred', head: '예측', col: 'col-pred', val: (i) => ds.pred?.[i] },
       { key: 'err', head: '오차', col: 'col-err', val: (i) => ds.err?.[i] },
       { key: 'sq', head: '오차²', col: 'col-sq', val: (i) => ds.sq?.[i] },
-      { key: 'ex', head: '오차·x', col: 'col-ex', val: (i) => ds.ex?.[i] },
+      { key: 'ex', head: '오차 × x', col: 'col-ex', val: (i) => ds.ex?.[i] },
     ];
-    const want = kind === 'intro' ? [] : page === 'predict' ? ['pred', 'err'] : ['err', 'sq', 'ex'];
-    const cols = COLS.filter((c) => want.includes(c.key));
+    const WANT = { predict: ['pred'], error: ['pred', 'err'], loss: ['err', 'sq'], grad: ['err', 'ex'] };
+    const cols = COLS.filter((c) => kind !== 'intro' && (WANT[page] ?? []).includes(c.key));
     const foot = { err: ds.err ? `합 ${fmt(sumOf(ds.err))}` : '', sq: ds.sq ? `평균 ${fmt(sumOf(ds.sq) / n)}` : '', ex: ds.ex ? `합 ${fmt(sumOf(ds.ex))}` : '', pred: '' };
     const table = el('table.dtable.dtable--reg', {},
       el('thead', {}, el('tr', {}, el('th', {}, 'x 공부 시간'), el('th', {}, 'y 점수'), cols.map((c) => el('th', {}, c.head)))),
@@ -142,23 +141,26 @@ export default {
         cols.map((c) => el('td.num', c.key === 'sq' ? { 'data-flip': 'sq-mean' } : {}, foot[c.key])))) : null,
     );
 
-    const vhot = hot('vars');
-    const varsBox = sbox({ target: 'vars', name: '변수', kind: '변수', title: '값 하나씩 담는 상자', frame },
-      el('div.vars', {},
-        varCell('w', fmt(ds.w), { hot: vhot && frame.action !== 'loss' && frame.action !== 'gradient', prev: frame.action === 'update' ? fmt(ds.prevW) : null }),
-        varCell('b', fmt(ds.b), { hot: vhot && frame.action !== 'loss' && frame.action !== 'gradient', prev: frame.action === 'update' ? fmt(ds.prevB) : null }),
-        varCell('학습률', String(ds.lr)),
-        varCell('에폭', String(ds.epoch), { hot: frame.action === 'loop' })),
-      el('div.vars', {},
-        el('span', { 'data-flip': 'var-loss', 'data-from': frame.action === 'loss' ? 'sq-mean' : null, 'data-force': frame.action === 'loss' ? '1' : null },
-          varCell('손실', ds.loss === null ? '–' : fmt(ds.loss), { hot: frame.action === 'loss' })),
-        varCell('dw', ds.dw === null ? '–' : fmt(ds.dw), { hot: frame.action === 'gradient' }),
-        varCell('db', ds.db === null ? '–' : fmt(ds.db), { hot: frame.action === 'gradient' })));
+    // 변수도 쪽마다 필요한 것만
+    const a = frame.action;
+    const VARS = {
+      w: () => varCell('w', fmt(ds.w), { hot: a === 'init' || a === 'update', prev: a === 'update' ? fmt(ds.prevW) : null }),
+      b: () => varCell('b', fmt(ds.b), { hot: a === 'init' || a === 'update', prev: a === 'update' ? fmt(ds.prevB) : null }),
+      lr: () => varCell('학습률', String(ds.lr)),
+      epoch: () => varCell('에폭', String(ds.epoch), { hot: a === 'loop' }),
+      loss: () => el('span', { 'data-flip': 'var-loss', 'data-from': a === 'loss' ? 'sq-mean' : null, 'data-force': a === 'loss' ? '1' : null },
+        varCell('손실', ds.loss === null ? '?' : fmt(ds.loss), { hot: a === 'loss' })),
+      dw: () => varCell('dw', ds.dw === null ? '?' : fmt(ds.dw), { hot: a === 'gradient' }),
+      db: () => varCell('db', ds.db === null ? '?' : fmt(ds.db), { hot: a === 'gradient' }),
+    };
+    const VARS_OF = { predict: ['w', 'b'], loss: ['loss'], grad: ['dw', 'db'], update: ['w', 'b', 'lr', 'dw', 'db'], repeat: ['epoch', 'w', 'b', 'loss'] };
+    const varsBox = sbox({ target: 'vars', name: '변수', kind: '변수', frame },
+      el('div.vars', {}, (VARS_OF[page] ?? ['w', 'b']).map((k) => VARS[k]())));
 
     const shown = ds.history.slice(-8);
     const offset = ds.history.length - shown.length;
-    const histBox = sbox({ target: 'history', name: '손실 기록', kind: '리스트', title: '에폭마다 한 칸', frame,
-      count: ds.history.length, hint: '8줄에서 에폭마다 한 칸씩 붙어요', bodyCls: 'pool' },
+    const histBox = sbox({ target: 'history', name: '손실 기록', kind: '리스트', frame,
+      count: ds.history.length, hint: '비어 있음', bodyCls: 'pool' },
     offset > 0 ? el('span.sbox__empty', {}, `…앞의 ${offset}개`) : null,
     shown.map((l, j) => {
       const i = offset + j;
@@ -170,9 +172,9 @@ export default {
     }));
 
     const parts = [];
-    if (boxes.has('table')) parts.push(sbox({ target: 'table', name: '데이터', kind: '리스트', title: '열 하나 = 리스트 하나', frame,
+    if (boxes.has('table')) parts.push(sbox({ target: 'table', name: '데이터', kind: '리스트', title: kind === 'intro' ? '열 하나 = 리스트 하나' : null, frame,
       op: frame.effects.find((e) => e.target.startsWith('col-'))?.op ?? null, cls: 'sbox--table' }, table));
-    if (boxes.has('table') && boxes.has('vars')) parts.push(flowArrow(page === 'loss' ? '평균 내서' : ''));
+    if (boxes.has('table') && boxes.has('vars')) parts.push(flowArrow({ loss: '평균', grad: '평균 × 2' }[page] ?? ''));
     const right = [];
     if (boxes.has('vars')) right.push(varsBox);
     if (boxes.has('vars') && boxes.has('history')) right.push(flowArrow('기록에 추가', 'down'));

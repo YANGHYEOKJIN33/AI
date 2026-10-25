@@ -4,10 +4,10 @@ import { makeExam, makeMockExam, traceTables } from '../src/core/exam.js';
 import { ALGORITHMS, ALGO_ORDER } from '../src/core/algorithms/index.js';
 
 const PAGES = {
-  knn: ['dist', 'sort', 'vote'],
-  kmeans: ['assign', 'update', 'repeat'],
-  linreg: ['predict', 'loss', 'update'],
-  dtree: ['root', 'grow'],
+  knn: ['dist', 'sort', 'slice', 'vote'],
+  kmeans: ['assign', 'mean', 'update', 'repeat'],
+  linreg: ['predict', 'error', 'loss', 'grad', 'update', 'repeat'],
+  dtree: ['count', 'split', 'choose', 'grow', 'finish'],
 };
 
 for (const id of ALGO_ORDER) {

@@ -61,7 +61,7 @@ function layoutOf(v) {
 export default {
   stageTitle: '트리 — 운동장에서 축구할까?',
   plotRatio: W / H,
-  stageHint: '점선 상자 = 만드는 중 · 색 상자 = 잎(답)',
+  introStage: false,   // 문제 보기 쪽에서는 트리가 아직 없으니 그림 칸을 접고 표를 크게
   targetName: (t) => TARGET_NAME[t] ?? t,
 
   intro: {
@@ -128,10 +128,10 @@ export default {
 
     // 호출 스택 — 아래가 바닥(먼저 부른 것), 위가 지금 실행 중인 호출
     const stack = el('div.stackwrap', {},
-      el('div.stack', {}, ds.stack.map((f, i) => el(`div.stack__frame${i === ds.stack.length - 1 ? '.is-top' : ''}`, {
+      ds.stack.length === 0 ? null : el('div.stack', {}, ds.stack.map((f, i) => el(`div.stack__frame${i === ds.stack.length - 1 ? '.is-top' : ''}`, {
         'data-flip': `sf-${f.nodeId}`, 'data-enter': 'up',
       }, `트리만들기(${f.rows}행${f.edge ? ` · ${f.edge}` : ''}, 깊이 ${f.depth})`))),
-      el('div.stack__label', {}, '▲ 맨 위 = 지금 실행 중 · 바닥 = 처음 호출'));
+      ds.stack.length === 0 ? el('div.sbox__empty', {}, '비어 있음') : null);
 
     // 지금 데이터 / 묶음
     const rowsBox = ds.groups
@@ -139,8 +139,8 @@ export default {
         el('div.bins', {}, ds.groups.bins.map((b) => el(`div.bin${ds.branch === b.value ? '.is-hot' : ''}${ds.branch && ds.branch !== b.value ? '.is-dim' : ''}`, {},
           el('div.bin__head', {}, `${b.value}`, el('span.bin__sub', {}, `${b.rows.length}개 · ${ds.criterion === 'entropy' ? 'H' : 'G'}=${fmt(b.imp, 3)}`)),
           el('div.bin__body', {}, b.rows.map(rowChip))))))
-      : sbox({ target: 'rows', name: '데이터 행', kind: '리스트', title: ds.cur ? '이 호출이 받은 행' : '', frame,
-        count: ds.rows.length, hint: ds.done ? '트리 완성 — 호출이 모두 끝났어요' : '', bodyCls: 'pool' }, ds.rows.map(rowChip));
+      : sbox({ target: 'rows', name: '데이터 행', kind: '리스트', frame,
+        count: ds.rows.length, hint: ds.done ? '트리 완성' : '', bodyCls: 'pool' }, ds.rows.map(rowChip));
 
     const counts = ds.labelCounts
       ? Object.entries(ds.labelCounts).map(([label, n]) => el('div.kv', { 'data-cat': LABEL[label].cat },
@@ -165,10 +165,9 @@ export default {
     if (boxes.has('stack')) parts.push(sbox({ target: 'stack', name: '호출 스택', kind: '스택', title: '맨 위 = 지금 실행 중', frame, cls: 'sbox--stack' }, stack));
     if (boxes.has('groups')) parts.push(el('div.flow__col.flow__col--wide', {}, rowsBox));
     const right = [];
-    if (boxes.has('counts')) right.push(sbox({ target: 'counts', name: '레이블 세기', kind: '딕셔너리', title: '지금 데이터', frame, hint: '호출되면 먼저 레이블을 세요' }, counts));
-    if (boxes.has('scores')) right.push(sbox({ target: 'scores', name: '점수표', kind: '딕셔너리', title: `특징 → 가중 ${ds.criterion === 'entropy' ? '엔트로피' : '지니'} (작을수록 좋음)`, frame,
-      hint: '특징을 시험할 때마다 한 줄씩' }, scoreRows));
-    if (right.length) { parts.push(flowArrow('세고 재기')); parts.push(el('div.flow__col', {}, right)); }
+    if (boxes.has('counts')) right.push(sbox({ target: 'counts', name: '레이블 세기', kind: '딕셔너리', frame, hint: '{ }' }, counts));
+    if (boxes.has('scores')) right.push(sbox({ target: 'scores', name: '점수표', kind: '딕셔너리', title: '작을수록 깨끗', frame, hint: '{ }' }, scoreRows));
+    if (right.length) { if (boxes.has('groups')) parts.push(flowArrow('점수 매기기')); parts.push(el('div.flow__col', {}, right)); }
     return el('div.flow.flow--tree', {}, parts);
   },
 };

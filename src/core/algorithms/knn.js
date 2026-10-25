@@ -168,8 +168,8 @@ export function run(params = defaults) {
       why: `d²이 가장 작은 ${nearest.name}(d² = ${nearest.d2})이 맨 앞으로 와요.`,
     },
     calc: {
-      title: '🔃 거리가 작은 순서',
-      rows: sorted.map((x, i) => `${i}번 ${x.name}  d² = ${x.d2}  (${x.label})`),
+      title: '🔃 d²을 비교해 작은 것부터',
+      rows: [sorted.map((x) => x.d2).join(' < ')],
     },
   });
 

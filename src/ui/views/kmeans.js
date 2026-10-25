@@ -26,7 +26,6 @@ function assignOf(ds) {
 
 export default {
   stageTitle: '산점도 — 마을 지도',
-  stageHint: '● 집 · ◆ 중심(배달 거점) · 점선 = 중심이 지나온 길',
   targetName: (t) => (t.startsWith('cluster') && t !== 'clusters' ? `묶음 ${clusterName(+t.slice(7))}` : TARGET_NAME[t] ?? t),
 
   intro: {
@@ -120,8 +119,8 @@ export default {
       }, c === undefined ? null : mark(CLUSTER_STYLE[c].shape, cat(c)), `${p.name}`, el('small', {}, ` (${p.x},${p.y})`));
     };
 
-    const pool = sbox({ target: 'pool', name: '점', kind: '리스트', title: '대기 줄 — 아직 나누지 않은 점', frame,
-      count: ds.pool.length, hint: '모두 묶음에 들어갔어요', cls: 'sbox--pool', bodyCls: 'pool' },
+    const pool = sbox({ target: 'pool', name: '점', kind: '리스트', title: '대기 줄', frame,
+      count: ds.pool.length, hint: '비어 있음 — 모두 묶음에 들어갔어요', cls: 'sbox--pool', bodyCls: 'pool' },
     ds.pool.map(housechip));
 
     const bins = el('div.bins', {}, ds.clusters.map((cl, c) => el(`div.bin${frame.effects.some((e) => e.target === `cluster${c}`) ? '.is-hot' : ''}`, {
@@ -130,7 +129,7 @@ export default {
     el('div.bin__head', {}, mark(CLUSTER_STYLE[c].shape, cat(c)), `묶음 ${clusterName(c)}`, el('span.bin__sub', {}, `${cl.length}개`)),
     el('div.bin__body', {}, cl.map(housechip)))));
 
-    const clustersBox = sbox({ target: 'clusters', name: '묶음', kind: '리스트', title: `묶음 ${ds.k}개`,
+    const clustersBox = sbox({ target: 'clusters', name: '묶음', kind: '리스트', frame,
       op: frame.effects.find((e) => e.target === 'clusters' || e.target.startsWith('cluster'))?.op ?? null }, bins);
 
     const centroidRows = ds.centroids.map((ct, c) => el(`div.kv${ds.moved?.[c] === false ? '.is-win' : ''}`, {
@@ -153,15 +152,14 @@ export default {
 
     const left = [];
     if (boxes.has('pool')) left.push(pool);
-    if (boxes.has('pool') && boxes.has('clusters')) left.push(flowArrow('가장 가까운 중심의 묶음으로 이동', 'down'));
+    if (boxes.has('pool') && boxes.has('clusters')) left.push(flowArrow('가장 가까운 중심의 묶음으로', 'down'));
     if (boxes.has('clusters')) left.push(clustersBox);
     const right = [];
     if (boxes.has('newCentroids')) right.push(sbox({ target: 'newCentroids', name: '새 중심', kind: '리스트', title: '묶음마다 평균', frame,
-      hint: '7줄에서 묶음마다 평균을 내요' }, newRows));
-    if (boxes.has('centroids')) right.push(sbox({ target: 'centroids', name: '중심', kind: '리스트', title: '지금 중심', frame }, centroidRows));
-    right.push(el('div.vars', {},
+      hint: '아직 없음' }, newRows));
+    if (boxes.has('centroids')) right.push(sbox({ target: 'centroids', name: '중심', kind: '리스트', frame }, centroidRows));
+    if (boxes.has('iter')) right.push(el('div.vars', {},
       varCell('회차', String(ds.iter), { hot: frame.action === 'loop' }),
-      varCell('k', String(ds.k)),
       ds.done ? varCell('결과', '수렴 ✓', { hot: true }) : null));
     return el('div.flow.flow--kmeans', {},
       left.length ? el('div.flow__col.flow__col--wide', {}, left) : null,
