@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>수업 화면 시안 (PLAN-v3) — 계획용 그림, 사이트에는 아직 반영되지 않음</title>
+<style>
+  /* 수업 무대: 1600×900(16:9) 논리 크기. 실제 사이트에서는 창 크기에 맞춰 통째로 확대·축소한다. */
+  :root {
+    --text:#14181f; --muted:#5a6472; --line:#d3d8e0; --soft:#eef0f4;
+    --blue:#1857c4; --blue-bg:#e3ecfd; --green:#17724a; --green-bg:#e0f3e9; --orange:#a75300; --orange-bg:#fdeddb;
+    --c1:#c2255c; --c1bg:#fde4ec; --c2:#0b7a69; --c2bg:#dcf3ee; --c3:#6741d9; --c3bg:#ebe5fc;
+    --ui:"Pretendard","Noto Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --code:"D2Coding","JetBrains Mono",ui-monospace,Consolas,monospace;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#c9ced6; font-family:var(--ui); color:var(--text); }
+  .slide { width:1600px; height:900px; background:#fff; margin:28px auto; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  .top { flex:0 0 64px; display:flex; align-items:center; justify-content:space-between; padding:0 44px; font-size:24px; color:var(--muted); border-bottom:2px solid var(--soft); }
+  .top b { color:var(--text); }
+  .steps { display:flex; gap:10px; align-items:center; }
+  .steps span { padding:4px 18px; border-radius:999px; background:var(--soft); }
+  .steps .on { background:var(--blue); color:#fff; font-weight:700; }
+  .steps .done { background:var(--green-bg); color:var(--green); }
+  .line { flex:0 0 104px; display:flex; align-items:center; gap:22px; padding:0 44px; background:var(--blue-bg); border-bottom:4px solid var(--blue); }
+  .line .no { font:700 28px var(--code); background:var(--blue); color:#fff; border-radius:10px; padding:6px 16px; }
+  .line code { font:700 38px var(--code); color:var(--blue); }
+  .line .what { margin-left:auto; font-size:24px; color:var(--muted); }
+  .main { flex:1 1 auto; display:flex; align-items:center; justify-content:center; gap:44px; padding:26px 44px; min-height:0; }
+  .cap { flex:0 0 104px; display:flex; align-items:center; gap:22px; padding:0 44px; background:var(--orange-bg); border-top:4px solid var(--orange); font-size:34px; }
+  .cap .k { font-weight:800; color:var(--orange); white-space:nowrap; }
+  .cap .old { color:var(--muted); text-decoration:line-through; }
+  .bar { flex:0 0 12px; background:var(--soft); } .bar i { display:block; height:100%; background:var(--blue); }
+  h1 { font-size:68px; line-height:1.25; margin:0; letter-spacing:-1px; }
+  h2 { font-size:52px; line-height:1.3; margin:0; }
+  .lead { font-size:36px; line-height:1.5; margin:0; }
+  .small { font-size:24px; color:var(--muted); }
+  .label { font-size:26px; font-weight:700; color:var(--blue); letter-spacing:1px; }
+  .col { display:flex; flex-direction:column; gap:22px; }
+  .card { border:3px solid var(--line); border-radius:22px; padding:28px 34px; background:#fff; }
+  /* 큰 자료구조 */
+  .ds { border:4px solid var(--line); border-radius:22px; background:#fff; padding:18px 22px 22px; }
+  .ds.hot { border-color:var(--blue); box-shadow:0 0 0 8px var(--blue-bg); }
+  .ds.dim { opacity:.45; }
+  .ds h3 { margin:0 0 14px; font-size:30px; display:flex; align-items:baseline; gap:14px; }
+  .ds h3 code { font:700 34px var(--code); }
+  .ds h3 small { font-size:24px; color:var(--muted); font-weight:400; }
+  .cell { display:flex; align-items:center; gap:16px; border:3px solid var(--line); border-radius:14px; padding:10px 18px; font-size:32px; margin-top:10px; background:#fff; }
+  .cell .ix { font:700 26px var(--code); color:var(--muted); min-width:44px; }
+  .cell .v { font:700 34px var(--code); }
+  .cell .nm { margin-left:auto; font-size:26px; color:var(--muted); }
+  .cell.new { border-color:var(--green); background:var(--green-bg); }
+  .cell.cur { border-color:var(--blue); background:var(--blue-bg); }
+  .cell.ghost { border-style:dashed; color:#aab1bb; background:#fafbfc; }
+  .tagnew { font-size:24px; font-weight:800; color:#fff; background:var(--green); border-radius:999px; padding:2px 14px; white-space:nowrap; }
+  .c1 { color:var(--c1); } .c2 { color:var(--c2); } .c3 { color:var(--c3); }
+  .arrow { font-size:84px; color:var(--blue); line-height:1; }
+  .calc { border-left:8px solid var(--blue); background:var(--soft); border-radius:12px; padding:16px 22px; font:700 32px var(--code); line-height:1.6; }
+  .calc .res { color:var(--blue); }
+  table.big { border-collapse:collapse; font-size:30px; }
+  table.big th { font-size:24px; color:var(--muted); font-weight:700; padding:6px 18px; text-align:left; border-bottom:3px solid var(--line); }
+  table.big td { padding:8px 18px; border-bottom:2px solid var(--soft); }
+  table.big tr.cur td { background:var(--blue-bg); font-weight:700; }
+  table.big tr.done td { color:#aab1bb; }
+  .q { font-size:58px; font-weight:800; line-height:1.35; }
+  .opt { border:4px solid var(--line); border-radius:18px; padding:18px 28px; font-size:38px; font-weight:700; background:#fff; min-width:300px; text-align:center; }
+  .hint { font-size:28px; color:var(--muted); }
+  .key { display:inline-block; border:2px solid var(--muted); border-bottom-width:5px; border-radius:8px; padding:0 12px; font:700 24px var(--code); color:var(--text); background:#fff; }
+  /* 교사 노트 서랍 */
+  .notes { position:absolute; left:0; right:0; bottom:0; height:330px; background:#1c2330; color:#fff; padding:22px 44px; display:grid; grid-template-columns:1.25fr 1fr 1fr auto; gap:34px; font-size:26px; line-height:1.5; box-shadow:0 -10px 30px rgba(0,0,0,.35); }
+  .notes h4 { margin:0 0 8px; font-size:22px; color:#9fc0ff; letter-spacing:1px; }
+  .notes .time { align-self:start; background:#2f3b52; border-radius:14px; padding:10px 18px; font:700 30px var(--code); text-align:center; }
+  .notes .time small { display:block; font:400 20px var(--ui); color:#b9c3d3; }
+  /* 변수 상자 */
+  .var { display:flex; align-items:center; gap:18px; border:4px solid var(--line); border-radius:18px; padding:16px 26px; font:700 44px var(--code); background:#fff; }
+  .var.hot { border-color:var(--blue); box-shadow:0 0 0 8px var(--blue-bg); }
+  .var.dim { opacity:.4; }
+  .var .old { color:#9aa3af; text-decoration:line-through; font-size:36px; }
+  .var .to { color:var(--blue); }
+  /* 스택 */
+  .stackbox { width:640px; border:6px solid #8a94a3; border-top:0; border-radius:0 0 22px 22px; padding:14px; display:flex; flex-direction:column-reverse; gap:12px; min-height:420px; justify-content:flex-start; }
+  .frame { border:4px solid var(--line); border-radius:14px; padding:16px 20px; font:700 30px var(--code); background:#fff; }
+  .frame.new { border-color:var(--green); background:var(--green-bg); }
+  /* 홈 */
+  .lesson { border:3px solid var(--line); border-radius:22px; padding:22px 26px; display:flex; flex-direction:column; gap:8px; background:#fff; }
+  .lesson .n { font:800 26px var(--ui); color:var(--blue); }
+  .lesson .t { font-size:34px; font-weight:800; }
+  .lesson .d { font-size:24px; color:var(--muted); line-height:1.4; }
+  .grid3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:22px; width:100%; }
+  /* 활동지 (A4) */
+  .sheet { width:794px; height:1123px; background:#fff; margin:28px auto; padding:48px 52px; font-size:17px; line-height:1.5; }
+  .sheet h1 { font-size:28px; letter-spacing:0; margin:0 0 4px; }
+  .sheet h2 { font-size:19px; margin:20px 0 8px; }
+  .sheet table { border-collapse:collapse; width:100%; font-size:16px; }
+  .sheet th, .sheet td { border:1.5px solid #333; padding:6px 8px; text-align:center; height:32px; }
+  .sheet th { background:#f0f0f0; }
+  .sheet .blank { background:#fff; }
+  .sheet .meta { display:flex; gap:24px; font-size:16px; border-bottom:2px solid #333; padding-bottom:8px; margin-bottom:6px; }
+  .sheet .boxes { display:flex; gap:6px; } .sheet .boxes span { flex:1; border:1.5px solid #333; height:54px; position:relative; }
+  .sheet .boxes span i { position:absolute; left:4px; top:2px; font-style:normal; font-size:12px; color:#555; }
+</style>
+</head>
+<body>
+
+<!-- ① 차시 표지 · 학습 목표 -->
+<section class="slide" id="m01-cover">
+  <div class="top"><span><b>1차시</b> · k-최근접 이웃</span><span>도입</span><span>장면 1 / 42</span></div>
+  <div class="main" style="flex-direction:column; align-items:flex-start; padding:40px 90px; gap:34px;">
+    <div class="label">오늘의 질문</div>
+    <h1>토마토는 과일일까, 채소일까,<br>단백질 식품일까?</h1>
+    <div class="card" style="width:100%;">
+      <div class="label" style="margin-bottom:12px;">오늘의 목표</div>
+      <p class="lead">① 새 데이터를 <b>가까운 이웃 k개의 투표</b>로 분류하는 방법을 설명할 수 있다.</p>
+      <p class="lead">② <b>distances 리스트</b>와 <b>votes 딕셔너리</b>가 한 줄씩 어떻게 바뀌는지 따라갈 수 있다.</p>
+    </div>
+    <div class="steps" style="font-size:26px; color:var(--muted);"><span>문제</span>▸<span>① 거리 재기</span>▸<span>② 정렬</span>▸<span>③ k개 고르기</span>▸<span>④ 투표</span>▸<span>정리·확인</span></div>
+  </div>
+  <div class="bar"><i style="width:2%"></i></div>
+</section>
+
+<!-- ② 개념 장면: 한 문장 + 그림 하나 -->
+<section class="slide" id="m02-idea">
+  <div class="top"><span><b>1차시</b> · k-최근접 이웃</span><span>개념</span><span>장면 4 / 42</span></div>
+  <div class="main" style="gap:70px;">
+    <div class="col" style="flex:0 0 620px; gap:30px;">
+      <h2>가까이 있는 것끼리<br>닮았다.</h2>
+      <p class="lead">단맛과 아삭함이 비슷한 음식은<br>그림에서 <b>가까운 곳</b>에 있어요.</p>
+      <p class="lead" style="color:var(--orange); font-weight:700;">★ 토마토와 가까운 음식은?</p>
+    </div>
+    <svg width="640" height="640" viewBox="0 0 640 640" font-family="sans-serif">
+      <g stroke="#e3e7ee" stroke-width="2"><path d="M60 60V580M164 60V580M268 60V580M372 60V580M476 60V580M580 60V580M60 60H580M60 164H580M60 268H580M60 372H580M60 476H580M60 580H580"/></g>
+      <g stroke="#8a94a3" stroke-width="3" fill="none"><path d="M60 60V580H580"/></g>
+      <text x="320" y="628" font-size="26" fill="#5a6472" text-anchor="middle" font-weight="700">단맛 →</text>
+      <text x="26" y="320" font-size="26" fill="#5a6472" text-anchor="middle" font-weight="700" transform="rotate(-90 26 320)">아삭함 →</text>
+      <!-- 과일 ● -->
+      <g fill="#c2255c" font-size="24"><circle cx="528" cy="112" r="15"/><text x="528" y="88" text-anchor="middle">사과</text><circle cx="476" cy="268" r="15"/><text x="476" y="244" text-anchor="middle">포도</text><circle cx="424" cy="424" r="15"/><text x="424" y="468" text-anchor="middle">오렌지</text></g>
+      <!-- 채소 ▲ -->
+      <g fill="#0b7a69" font-size="24"><path d="M424 147l17 30h-34z"/><text x="424" y="136" text-anchor="middle">당근</text><path d="M164 199l17 30h-34z"/><text x="164" y="258" text-anchor="middle">오이</text><path d="M164 95l17 30h-34z"/><text x="164" y="84" text-anchor="middle">셀러리</text></g>
+      <!-- 단백질 ■ -->
+      <g fill="#6741d9" font-size="24"><rect x="254" y="306" width="28" height="28"/><text x="268" y="296" text-anchor="middle">견과류</text><rect x="202" y="410" width="28" height="28"/><text x="170" y="434" text-anchor="middle">생선</text><rect x="202" y="462" width="28" height="28"/><text x="216" y="520" text-anchor="middle">치즈</text></g>
+      <!-- 토마토 ★ (6, 4) -->
+      <path d="M372 344l8.2 16.7 18.4 2.7-13.3 13 3.1 18.3L372 386l-16.4 8.7 3.1-18.3-13.3-13 18.4-2.7z" fill="#a75300"/>
+      <text x="372" y="330" font-size="28" fill="#a75300" text-anchor="middle" font-weight="800">★ 토마토</text>
+    </svg>
+  </div>
+  <div class="bar"><i style="width:10%"></i></div>
+</section>
+
+<!-- ③ 이동 장면 (핵심): 지금 줄 + 원본 → 대상 + 바뀐 것 -->
+<section class="slide" id="m03-move">
+  <div class="top"><span><b>1차시</b> · k-최근접 이웃</span><div class="steps"><span class="on">① 거리 재기</span><span>② 정렬</span><span>③ k개 고르기</span><span>④ 투표</span></div><span>장면 16 / 42</span></div>
+  <div class="line"><span class="no">4</span><code>distances에 (d², 레이블)을 추가한다</code><span class="what">3번째 학습 데이터 · 오렌지</span></div>
+  <div class="main">
+    <div class="ds" style="flex:0 0 520px;">
+      <h3><code>학습 데이터</code><small>표</small></h3>
+      <table class="big" style="width:100%;">
+        <tr><th>이름</th><th>단맛</th><th>아삭</th><th>레이블</th></tr>
+        <tr class="done"><td>사과</td><td>9</td><td>9</td><td>● 과일</td></tr>
+        <tr class="done"><td>포도</td><td>8</td><td>6</td><td>● 과일</td></tr>
+        <tr class="cur"><td>오렌지</td><td>7</td><td>3</td><td class="c1">● 과일</td></tr>
+        <tr><td>당근</td><td>7</td><td>8</td><td class="c2">▲ 채소</td></tr>
+        <tr><td colspan="4" class="small">… 아래 5줄</td></tr>
+      </table>
+    </div>
+    <div class="col" style="align-items:center; gap:14px;">
+      <div class="calc">d² = <span class="res">2</span></div>
+      <svg width="110" height="70" viewBox="0 0 110 70"><path d="M4 35h78" stroke="#1857c4" stroke-width="14" stroke-linecap="round"/><path d="M66 10l34 25-34 25" fill="none" stroke="#1857c4" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="ds hot" style="flex:0 0 640px;">
+      <h3><code>distances</code><small>리스트 · 3칸</small></h3>
+      <div class="cell"><span class="ix">[0]</span><span class="v">(34, <span class="c1">● 과일</span>)</span><span class="nm">사과</span></div>
+      <div class="cell"><span class="ix">[1]</span><span class="v">(8, <span class="c1">● 과일</span>)</span><span class="nm">포도</span></div>
+      <div class="cell new"><span class="ix">[2]</span><span class="v">(2, <span class="c1">● 과일</span>)</span><span class="nm">오렌지</span><span class="tagnew">방금 추가</span></div>
+      <div class="cell ghost"><span class="ix">[3]</span><span class="v">다음 칸</span></div>
+    </div>
+  </div>
+  <div class="cap"><span class="k">바뀐 것</span><span><code style="font:700 34px var(--code)">distances</code> &nbsp;<span class="old">2칸</span> → <b>3칸</b> &nbsp;·&nbsp; 맨 뒤 [2]에 <b>(2, 과일)</b>이 들어왔다</span></div>
+  <div class="bar"><i style="width:38%"></i></div>
+</section>
+
+<!-- ④ 정렬: 전 → 후를 나란히 -->
+<section class="slide" id="m04-sort">
+  <div class="top"><span><b>1차시</b> · k-최근접 이웃</span><div class="steps"><span class="done">① 거리 재기 ✓</span><span class="on">② 정렬</span><span>③ k개 고르기</span><span>④ 투표</span></div><span>장면 24 / 42</span></div>
+  <div class="line"><span class="no">5</span><code>distances를 d²이 작은 순서로 정렬한다</code></div>
+  <div class="main" style="flex-direction:column; gap:0; padding:18px 44px;">
+    <div style="display:flex; align-items:center; gap:18px; width:1510px;"><span class="small" style="width:110px; font-weight:700;">정렬 전</span>
+      <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:12px; flex:1; opacity:.5;">
+        <div class="sc c1">34<small>사과</small></div><div class="sc c1">8<small>포도</small></div><div class="sc c1">2<small>오렌지</small></div><div class="sc c2">17<small>당근</small></div><div class="sc c2">25<small>오이</small></div><div class="sc c2">41<small>셀러리</small></div><div class="sc c3">5<small>견과류</small></div><div class="sc c3">10<small>생선</small></div><div class="sc c3">13<small>치즈</small></div>
+      </div></div>
+    <svg width="1510" height="150" viewBox="0 0 1510 150" style="display:block;">
+      <g fill="none" stroke-width="5" stroke-linecap="round" opacity=".75" transform="translate(128 0)">
+        <!-- 칸 가운데 x = 73 + i*153.5 (전), 같은 식(후) -->
+        <path d="M73 4C73 80 1147.5 70 1147.5 146" stroke="#c2255c"/>
+        <path d="M226.5 4C226.5 80 380 70 380 146" stroke="#c2255c"/>
+        <path d="M380 4C380 80 73 70 73 146" stroke="#1857c4" stroke-width="9" opacity="1"/>
+        <path d="M533.5 4C533.5 80 840.5 70 840.5 146" stroke="#0b7a69"/>
+        <path d="M687 4C687 80 994 70 994 146" stroke="#0b7a69"/>
+        <path d="M840.5 4C840.5 80 1301 70 1301 146" stroke="#0b7a69"/>
+        <path d="M994 4C994 80 226.5 70 226.5 146" stroke="#6741d9"/>
+        <path d="M1147.5 4C1147.5 80 533.5 70 533.5 146" stroke="#6741d9"/>
+        <path d="M1301 4C1301 80 687 70 687 146" stroke="#6741d9"/>
+      </g>
+    </svg>
+    <div style="display:flex; align-items:center; gap:18px; width:1510px;"><span class="small" style="width:110px; font-weight:700; color:var(--blue);">정렬 후</span>
+      <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:12px; flex:1;">
+        <div class="sc c1 first">2<small>오렌지</small></div><div class="sc c3">5<small>견과류</small></div><div class="sc c1">8<small>포도</small></div><div class="sc c3">10<small>생선</small></div><div class="sc c3">13<small>치즈</small></div><div class="sc c2">17<small>당근</small></div><div class="sc c2">25<small>오이</small></div><div class="sc c1">34<small>사과</small></div><div class="sc c2">41<small>셀러리</small></div>
+      </div></div>
+    <div style="display:flex; gap:18px; width:1510px; margin-top:8px;"><span style="width:110px;"></span>
+      <div style="display:grid; grid-template-columns:repeat(9, 1fr); gap:12px; flex:1; font:700 26px var(--code); color:var(--muted); text-align:center;"><span style="color:var(--blue)">[0]</span><span>[1]</span><span>[2]</span><span>[3]</span><span>[4]</span><span>[5]</span><span>[6]</span><span>[7]</span><span>[8]</span></div></div>
+  </div>
+  <div class="cap"><span class="k">바뀐 것</span><span><b>순서만</b> 바뀌었다 (9칸 그대로) &nbsp;·&nbsp; 가장 가까운 <b>오렌지(2)</b>가 [0]으로</span></div>
+  <div class="bar"><i style="width:57%"></i></div>
+  <style>
+    .sc { border:4px solid currentColor; border-radius:16px; background:#fff; text-align:center; font:800 46px var(--code); padding:12px 0 8px; }
+    .sc small { display:block; font:700 24px var(--ui); color:var(--muted); margin-top:2px; }
+    .sc.first { box-shadow:0 0 0 8px var(--blue-bg); border-color:var(--blue); }
+  </style>
+</section>
+
+<!-- ⑤ 멈춤 질문: 답은 다음 클릭에 -->
+<section class="slide" id="m05-ask">
+  <div class="top"><span><b>1차시</b> · k-최근접 이웃</span><div class="steps"><span class="done">① 거리 재기 ✓</span><span class="on">② 정렬</span><span>③ k개 고르기</span><span>④ 투표</span></div><span>장면 23 / 42</span></div>
+  <div class="main" style="flex-direction:column; gap:36px;">
+    <div class="label" style="font-size:30px;">✋ 먼저 생각해 보기</div>
+    <div class="q" style="text-align:center;">d²이 작은 순서로 정렬하면<br><span style="color:var(--blue)">[0]번 칸</span>에는 어떤 음식이 올까요?</div>
+    <div style="display:flex; gap:24px;"><div class="opt">사과 <small style="font-size:28px; color:var(--muted)">34</small></div><div class="opt">오렌지 <small style="font-size:28px; color:var(--muted)">2</small></div><div class="opt">견과류 <small style="font-size:28px; color:var(--muted)">5</small></div><div class="opt">치즈 <small style="font-size:28px; color:var(--muted)">13</small></div></div>
+    <div class="hint">짝과 30초 이야기해 보세요. &nbsp; <span class="key">→</span> 를 누르면 정렬되는 모습으로 확인합니다.</div>
+  </div>
+  <div class="bar"><i style="width:55%"></i></div>
+</section>
+
+<!-- ⑥ 선형회귀 갱신: 변수 하나만 바뀐다 + 그림 -->
+<section class="slide" id="m06-update">
+  <div class="top"><span><b>4차시</b> · 선형회귀 ②</span><div class="steps"><span class="done">④ 기울기 ✓</span><span class="on">⑤ 갱신</span><span>⑥ 기록·반복</span></div><span>장면 14 / 38</span></div>
+  <div class="line"><span class="no">7</span><code>w ← w − 학습률 × dw</code><span class="what">1번째 에폭</span></div>
+  <div class="main" style="gap:60px;">
+    <div class="col" style="flex:0 0 720px; gap:26px;">
+      <div class="calc">w = 0 − 0.05 × (−39.2)<br>&nbsp; = <span class="res">1.96</span></div>
+      <div style="display:flex; gap:22px;">
+        <div class="var hot">w = <span class="old">0</span><span class="to">→</span> 1.96</div>
+        <div class="var dim">b = 0</div>
+      </div>
+      <p class="lead" style="font-size:30px; color:var(--muted);">dw가 <b style="color:var(--text)">음수</b> → 빼면 더해져서 w가 <b style="color:var(--text)">커진다</b></p>
+    </div>
+    <svg width="560" height="560" viewBox="0 0 560 560" font-family="sans-serif">
+      <g stroke="#e3e7ee" stroke-width="2"><path d="M60 40V500M140 40V500M220 40V500M300 40V500M380 40V500M460 40V500M540 40V500M60 40H540M60 132H540M60 224H540M60 316H540M60 408H540M60 500H540"/></g>
+      <g stroke="#8a94a3" stroke-width="3" fill="none"><path d="M60 40V500H540"/></g>
+      <text x="300" y="545" font-size="24" fill="#5a6472" text-anchor="middle" font-weight="700">공부 시간 →</text>
+      <!-- 이전 직선 y=0 (점선) · 새 직선 y=1.96x (b는 아직 0) -->
+      <path d="M60 500H540" stroke="#9aa3af" stroke-width="5" stroke-dasharray="12 10"/>
+      <text x="470" y="486" font-size="24" fill="#7b8592" text-anchor="middle">이전 y = 0x</text>
+      <path d="M60 500L454 145" stroke="#1857c4" stroke-width="7" stroke-linecap="round"/>
+      <text x="196" y="118" font-size="28" fill="#1857c4" font-weight="800" text-anchor="middle">지금 y = 1.96x</text>
+      <g fill="#fff" stroke="#0b7a69" stroke-width="5"><circle cx="140" cy="408" r="12"/><circle cx="220" cy="316" r="12"/><circle cx="300" cy="270" r="12"/><circle cx="380" cy="178" r="12"/><circle cx="460" cy="86" r="12"/></g>
+    </svg>
+  </div>
+  <div class="cap"><span class="k">바뀐 것</span><span><code style="font:700 34px var(--code)">w</code> &nbsp;<span class="old">0</span> → <b>1.96</b> &nbsp;·&nbsp; 누워 있던 직선이 일어섰다 &nbsp;<span class="small">(b는 다음 장면에서)</span></span></div>
+  <div class="bar"><i style="width:37%"></i></div>
+</section>
+
+<!-- ⑦ 의사결정트리: 호출 스택 한 칸이 쌓인다 -->
+<section class="slide" id="m07-stack">
+  <div class="top"><span><b>6차시</b> · 의사결정트리 ②</span><div class="steps"><span class="done">③ 질문 고르기 ✓</span><span class="on">④ 가지 만들기(재귀)</span><span>⑤ 완성</span></div><span>장면 9 / 40</span></div>
+  <div class="line"><span class="no">9</span><code>가지[맑음] ← 트리만들기(묶음[맑음], …)</code></div>
+  <div class="main" style="gap:80px;">
+    <div class="col" style="align-items:center; gap:12px;">
+      <div class="label" style="color:var(--text); font-size:30px;">호출 스택 <span class="small" style="font-weight:400;">· 위가 지금 실행 중</span></div>
+      <div class="stackbox">
+        <div class="frame">트리만들기(전체 14행)</div>
+        <div class="frame new">트리만들기(맑음 5행) <span class="tagnew" style="margin-left:10px;">방금 쌓임</span></div>
+      </div>
+    </div>
+    <svg width="560" height="440" viewBox="0 0 560 440" font-family="sans-serif">
+      <path d="M280 96L150 250" stroke="#1857c4" stroke-width="6"/>
+      <path d="M280 96L280 250M280 96L410 250" stroke="#d3d8e0" stroke-width="5" stroke-dasharray="10 10"/>
+      <rect x="180" y="30" width="200" height="70" rx="14" fill="#fff" stroke="#8a94a3" stroke-width="4"/>
+      <text x="280" y="76" font-size="32" font-weight="800" text-anchor="middle" fill="#14181f">날씨는?</text>
+      <text x="176" y="176" font-size="26" fill="#1857c4" font-weight="700" text-anchor="middle">맑음</text>
+      <text x="312" y="196" font-size="24" fill="#aab1bb" text-anchor="middle">흐림</text><text x="388" y="176" font-size="24" fill="#aab1bb" text-anchor="middle">비</text>
+      <rect x="6" y="250" width="288" height="88" rx="14" fill="#e3ecfd" stroke="#1857c4" stroke-width="5" stroke-dasharray="14 8"/>
+      <text x="150" y="286" font-size="28" font-weight="800" text-anchor="middle" fill="#1857c4">? 만드는 중</text>
+      <text x="150" y="320" font-size="24" text-anchor="middle" fill="#5a6472">5행 · 한다 2 · 안 한다 3</text>
+      <text x="280" y="400" font-size="24" text-anchor="middle" fill="#5a6472">트리 — 지금 만드는 노드만 파랗게</text>
+    </svg>
+  </div>
+  <div class="cap"><span class="k">바뀐 것</span><span>호출 스택 &nbsp;<span class="old">1칸</span> → <b>2칸</b> &nbsp;·&nbsp; "맑음" 묶음 5행으로 같은 함수를 다시 불렀다</span></div>
+  <div class="bar"><i style="width:22%"></i></div>
+</section>
+
+<!-- ⑧ 확인 문제 (시험 형식) -->
+<section class="slide" id="m08-check">
+  <div class="top"><span><b>1차시</b> · k-최근접 이웃</span><span>정리 · 확인 문제 2 / 3</span><span>장면 40 / 42</span></div>
+  <div class="main" style="flex-direction:column; gap:34px; align-items:flex-start; padding:36px 110px;">
+    <div class="label" style="font-size:30px;">📝 확인 문제 — 활동지에 답을 적으세요</div>
+    <div class="q" style="font-size:52px;">k = 5일 때, 투표가 끝난 <span style="font-family:var(--code); color:var(--blue)">votes</span> 딕셔너리는?</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:22px; width:100%;">
+      <div class="opt" style="text-align:left; font-family:var(--code);">① { 과일: 3, 단백질: 2 }</div>
+      <div class="opt" style="text-align:left; font-family:var(--code);">② { 과일: 2, 단백질: 3 }</div>
+      <div class="opt" style="text-align:left; font-family:var(--code);">③ { 과일: 2, 채소: 3 }</div>
+      <div class="opt" style="text-align:left; font-family:var(--code);">④ { 과일: 1, 단백질: 4 }</div>
+    </div>
+    <div class="hint"><span class="key">→</span> 정답과 풀이 &nbsp;·&nbsp; 풀이에서 "그 장면 다시 보기"로 정렬된 distances 장면으로 돌아갈 수 있어요.</div>
+  </div>
+  <div class="bar"><i style="width:95%"></i></div>
+</section>
+
+<!-- ⑨ 교사 노트(N 키): 무대가 위로 줄어들고, 아래에 설명 · 발문 · 예상 답 · 시간 -->
+<section class="slide" id="m09-notes" style="background:#0f141d;">
+  <div style="flex:0 0 570px; display:flex; justify-content:center; align-items:center;">
+<div class="slide" style="margin:0; zoom:.63; box-shadow:0 0 0 3px #3a465c;">
+  <div class="top"><span><b>1차시</b> · k-최근접 이웃</span><div class="steps"><span class="on">① 거리 재기</span><span>② 정렬</span><span>③ k개 고르기</span><span>④ 투표</span></div><span>장면 16 / 42</span></div>
+  <div class="line"><span class="no">4</span><code>distances에 (d², 레이블)을 추가한다</code><span class="what">3번째 학습 데이터 · 오렌지</span></div>
+  <div class="main">
+    <div class="ds" style="flex:0 0 520px;">
+      <h3><code>학습 데이터</code><small>표</small></h3>
+      <table class="big" style="width:100%;">
+        <tr><th>이름</th><th>단맛</th><th>아삭</th><th>레이블</th></tr>
+        <tr class="done"><td>사과</td><td>9</td><td>9</td><td>● 과일</td></tr>
+        <tr class="done"><td>포도</td><td>8</td><td>6</td><td>● 과일</td></tr>
+        <tr class="cur"><td>오렌지</td><td>7</td><td>3</td><td class="c1">● 과일</td></tr>
+        <tr><td>당근</td><td>7</td><td>8</td><td class="c2">▲ 채소</td></tr>
+        <tr><td colspan="4" class="small">… 아래 5줄</td></tr>
+      </table>
+    </div>
+    <div class="col" style="align-items:center; gap:14px;">
+      <div class="calc">d² = <span class="res">2</span></div>
+      <svg width="110" height="70" viewBox="0 0 110 70"><path d="M4 35h78" stroke="#1857c4" stroke-width="14" stroke-linecap="round"/><path d="M66 10l34 25-34 25" fill="none" stroke="#1857c4" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="ds hot" style="flex:0 0 640px;">
+      <h3><code>distances</code><small>리스트 · 3칸</small></h3>
+      <div class="cell"><span class="ix">[0]</span><span class="v">(34, <span class="c1">● 과일</span>)</span><span class="nm">사과</span></div>
+      <div class="cell"><span class="ix">[1]</span><span class="v">(8, <span class="c1">● 과일</span>)</span><span class="nm">포도</span></div>
+      <div class="cell new"><span class="ix">[2]</span><span class="v">(2, <span class="c1">● 과일</span>)</span><span class="nm">오렌지</span><span class="tagnew">방금 추가</span></div>
+      <div class="cell ghost"><span class="ix">[3]</span><span class="v">다음 칸</span></div>
+    </div>
+  </div>
+  <div class="cap"><span class="k">바뀐 것</span><span><code style="font:700 34px var(--code)">distances</code> &nbsp;<span class="old">2칸</span> → <b>3칸</b> &nbsp;·&nbsp; 맨 뒤 [2]에 <b>(2, 과일)</b>이 들어왔다</span></div>
+  <div class="bar"><i style="width:38%"></i></div>
+</div>
+  </div>
+  <div class="notes" style="position:static; flex:1 1 auto; height:auto; box-shadow:none;">
+    <div><h4>이렇게 말해요</h4>"방금 잰 오렌지의 거리 2를 레이블 '과일'과 한 쌍으로 묶어 리스트 <b>맨 뒤</b>에 붙였어요. 리스트는 넣은 순서대로 [0], [1], [2] 번호가 붙습니다."</div>
+    <div><h4>이렇게 물어요</h4>"지금 distances는 가까운 순서인가요? 아니면 어떤 순서인가요?"</div>
+    <div><h4>예상 답 · 주의</h4>표에 적힌 순서(사과 → 포도 → 오렌지).<br><span style="color:#ffd08a">자주 하는 오해: 넣을 때부터 가까운 순서로 들어간다.</span></div>
+    <div class="time">1분<small>누적 17 / 50분</small><small style="margin-top:8px;">다음: 당근 d²</small></div>
+  </div>
+</section>
+
+<!-- ⑩ 수업 홈: 차시를 고른다 -->
+<section class="slide" id="m10-home">
+  <div class="top"><span><b>자료구조로 배우는 머신러닝 알고리즘</b></span><span></span><span>📝 연습 · 👩‍🏫 교사용 자료</span></div>
+  <div class="main" style="flex-direction:column; align-items:stretch; gap:20px; padding:26px 60px;">
+    <h2 style="font-size:44px;">오늘 수업할 차시를 고르세요</h2>
+    <div class="grid3">
+      <div class="lesson"><span class="n">1차시</span><span class="t">📍 k-최근접 이웃</span><span class="d">거리 재기 → 정렬 → k개 → 투표<br>리스트 · 딕셔너리</span></div>
+      <div class="lesson"><span class="n">2차시</span><span class="t">🎯 k-평균 군집</span><span class="d">묶음에 나누기 → 평균 → 반복<br>리스트의 리스트</span></div>
+      <div class="lesson"><span class="n">3차시</span><span class="t">📈 선형회귀 ①</span><span class="d">직선 · 예측 → 오차 → 손실<br>리스트(열) · 변수</span></div>
+      <div class="lesson"><span class="n">4차시</span><span class="t">📈 선형회귀 ②</span><span class="d">기울기 → 갱신 → 기록 · 반복<br>변수 갱신 · 기록 리스트</span></div>
+      <div class="lesson"><span class="n">5차시</span><span class="t">🌳 의사결정트리 ①</span><span class="d">나누기 → 불순도 → 질문 고르기<br>딕셔너리(묶음 · 점수표)</span></div>
+      <div class="lesson"><span class="n">6차시</span><span class="t">🌳 의사결정트리 ②</span><span class="d">재귀 · 호출 스택 → 트리 완성<br>스택</span></div>
+    </div>
+    <div style="display:flex; gap:22px;">
+      <div class="lesson" style="flex:1; background:var(--soft);"><span class="n" style="color:var(--muted)">선택</span><span class="t" style="font-size:30px;">준비 — 데이터와 자료구조</span></div>
+      <div class="lesson" style="flex:1; background:var(--soft);"><span class="n" style="color:var(--muted)">선택</span><span class="t" style="font-size:30px;">종합 — 네 알고리즘 정리 · 모의시험</span></div>
+    </div>
+    <div class="hint" style="font-size:24px;">지난번에 멈춘 곳: <b style="color:var(--text)">1차시 · 장면 24 (② 정렬)</b> &nbsp;<span class="key">이어서 하기</span></div>
+  </div>
+</section>
+
+<!-- ⑪ 학생 활동지 (A4 한 쪽) -->
+<section class="sheet" id="m11-worksheet">
+  <div class="meta"><b>1차시 활동지 — k-최근접 이웃</b><span style="margin-left:auto;">학년 반 번 이름 ____________</span></div>
+  <h1>토마토(단맛 6, 아삭함 4)는 무엇과 닮았을까?</h1>
+  <h2>① 거리 재기 — d² = (단맛 차이)² + (아삭함 차이)² &nbsp;<small>(수업 장면 12~21)</small></h2>
+  <table><tr><th>[번호]</th><th>이름</th><th>단맛</th><th>아삭함</th><th>레이블</th><th>단맛 차이²</th><th>아삭함 차이²</th><th>d²</th></tr>
+    <tr><td>[0]</td><td>사과</td><td>9</td><td>9</td><td>과일</td><td>9</td><td>25</td><td>34</td></tr>
+    <tr><td>[1]</td><td>포도</td><td>8</td><td>6</td><td>과일</td><td>4</td><td>4</td><td>8</td></tr>
+    <tr><td>[2]</td><td>오렌지</td><td>7</td><td>3</td><td>과일</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>[3]</td><td>당근</td><td>7</td><td>8</td><td>채소</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>[4]</td><td>오이</td><td>2</td><td>7</td><td>채소</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>[5]</td><td>셀러리</td><td>2</td><td>9</td><td>채소</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>[6]</td><td>견과류</td><td>4</td><td>5</td><td>단백질</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>[7]</td><td>생선</td><td>3</td><td>3</td><td>단백질</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>[8]</td><td>치즈</td><td>3</td><td>2</td><td>단백질</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr></table>
+  <h2>② 정렬 — distances를 d²이 작은 순서로 다시 적으세요 (d², 레이블)</h2>
+  <div class="boxes"><span><i>[0]</i></span><span><i>[1]</i></span><span><i>[2]</i></span><span><i>[3]</i></span><span><i>[4]</i></span><span><i>[5]</i></span><span><i>[6]</i></span><span><i>[7]</i></span><span><i>[8]</i></span></div>
+  <h2>③ 앞에서 k개 고르고 투표하기</h2>
+  <table><tr><th>k</th><th>이웃 (앞에서 k개)</th><th>votes 딕셔너리 { 레이블: 표 수 }</th><th>예측</th></tr>
+    <tr><td>1</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>3</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>
+    <tr><td>5</td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr></table>
+  <h2>④ 한 문장으로 — k를 3에서 5로 늘리면 예측이 바뀌는 까닭은?</h2>
+  <div style="border:1.5px solid #333; height:86px;"></div>
+  <h2>⑤ 확인 문제 답 &nbsp; 1번 (&nbsp;&nbsp;&nbsp;) &nbsp; 2번 (&nbsp;&nbsp;&nbsp;) &nbsp; 3번 (&nbsp;&nbsp;&nbsp;)</h2>
+  <p style="color:#555; font-size:14px; margin-top:26px;">※ 활동지와 정답지는 사이트의 실제 계산 결과에서 자동으로 만들어 인쇄합니다 (계획 6.2).</p>
+</section>
+
+</body>
+</html>

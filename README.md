@@ -64,6 +64,7 @@ https://yanghyeokjin33.github.io/Fundamentals-of-AI/
 
 ## 문서
 
+- **[수업 교구 재구성 계획서 (PLAN-v3.md)](./PLAN-v3.md)** — 다음 개편 계획: 큰 수업 화면, 6차시 [장면 구성안](./docs/plan-v3/SCENES.md), 교사 노트·활동지 (개발 전)
 - **[개발 계획서 (PLAN.md)](./PLAN.md)** — 목표·대상·화면·알고리즘별 설계·로드맵·완료 기준
 - [교사용 안내 (docs/TEACHER.md)](./docs/TEACHER.md) — 차시 예시·쪽별 발문·과제
 - [구조 안내 (docs/ARCHITECTURE.md)](./docs/ARCHITECTURE.md) — 폴더, 단계 기록 형식, 알고리즘 추가법
