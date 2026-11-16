@@ -1,0 +1,59 @@
+/* ============================================================
+   사이트 틀(v4) — 탭 줄 · 쪽 줄 · 두 칸 작업대 · 아래 띠 (PLAN-v4 3장)
+   deck.css의 무대(1600×900)와 큰 부품을 그대로 쓰고, 사이트 형태의 자리만 더한다.
+   가장 작은 글자 22px(화면 높이의 2.4%).
+   ============================================================ */
+.site a { color: inherit; text-decoration: none; }
+.site button { font: inherit; cursor: pointer; }
+.site .tabs { flex: 0 0 60px; display: flex; align-items: center; gap: 12px; padding: 0 32px; background: #fff; border-bottom: 2px solid var(--soft); font-size: 24px; white-space: nowrap; }
+.site .tabs .site { font-weight: 800; margin-right: 10px; color: var(--text); }
+.site .tab { padding: 4px 18px; border-radius: 999px; border: 2px solid var(--linec); color: var(--muted); }
+.site .tab.on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+.site .tabs .sep { color: var(--linec); }
+.site .sub { padding: 4px 14px; border-radius: 10px; color: var(--muted); border: 2px solid transparent; }
+.site .sub.on { background: var(--blue-bg); color: var(--blue); font-weight: 700; border-color: var(--blue); }
+.site .pagebar { flex: 0 0 72px; display: flex; align-items: center; gap: 18px; padding: 0 32px; background: #fff; border-bottom: 2px solid var(--soft); white-space: nowrap; }
+.site .dots { display: flex; gap: 6px; }
+.site .dots button { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--linec); background: #fff; font: 700 22px var(--font-code); color: var(--muted); padding: 0; }
+.site .dots .done { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.site .dots .on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.site .pagebar h2 { font-size: 32px; margin: 0; }
+.site .pagebar p { font-size: 24px; margin: 0; overflow: hidden; text-overflow: ellipsis; }
+.site .navbtn { margin-left: auto; display: flex; gap: 10px; }
+.site .navbtn button { border: 2px solid var(--linec); border-radius: 999px; padding: 4px 20px; font-size: 24px; background: #fff; }
+.site .navbtn .go { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+.site .work { flex: 1 1 auto; display: flex; gap: 16px; padding: 14px 32px 12px; min-height: 0; background: #f7f8fa; }
+.site .panel { background: #fff; border: 2px solid var(--linec); border-radius: 18px; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.site .panel.left { flex: 0 0 540px; } .site .panel.right { flex: 1 1 auto; }
+.site .panel > h4 { margin: 0; padding: 8px 20px; font-size: 22px; border-bottom: 2px solid var(--soft); display: flex; gap: 12px; align-items: center; color: var(--muted); font-weight: 400; white-space: nowrap; }
+.site .panel > h4 b { color: var(--text); font-size: 24px; }
+.site .panel .body { flex: 1 1 auto; padding: 14px 20px; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.site .panel.left .body { justify-content: flex-start; }
+.site .panel.left .body.concept { justify-content: center; padding: 20px 30px; }
+.site .panel.right .body { justify-content: center; align-items: center; }
+.site .ptab { margin-left: auto; display: flex; gap: 6px; }
+.site .ptab button { padding: 0 14px; border-radius: 999px; border: 2px solid var(--linec); font-size: 22px; background: #fff; color: var(--muted); }
+.site .ptab .on { background: var(--text); color: #fff; border-color: var(--text); }
+.site .code { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.site .code li { display: flex; gap: 14px; align-items: baseline; padding: 8px 14px; border-radius: 12px; border: 3px solid transparent; font: 700 24px/1.35 var(--font-code); white-space: pre-wrap; }
+.site .code li .no { font-size: 22px; color: var(--muted); min-width: 26px; text-align: right; flex: 0 0 auto; }
+.site .code li.on { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+.site .code li.off { color: #8b95a3; font-weight: 400; padding-top: 2px; padding-bottom: 2px; font-size: 22px; }
+.site .calc.sm { font-size: 24px; padding: 10px 16px; white-space: pre-wrap; }
+.site .bottom { flex: 0 0 84px; display: flex; align-items: center; gap: 18px; padding: 0 32px; background: var(--orange-bg); border-top: 4px solid var(--orange); font-size: 28px; white-space: nowrap; }
+.site .bottom .btext { display: flex; gap: 16px; align-items: center; min-width: 0; overflow: hidden; }
+.site .bottom .k { font-weight: 800; color: var(--orange); }
+.site .bottom .old { color: var(--muted); text-decoration: line-through; }
+.site .bottom code { font: 700 28px var(--font-code); }
+.site .bottom.wait { background: #fff; border-top-color: var(--soft); color: var(--muted); }
+.site .bottom.ask { background: var(--blue-bg); border-top-color: var(--blue); font-weight: 700; color: var(--blue); }
+.site .ctrl { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.site .ctrl button { border: 2px solid var(--linec); border-radius: 12px; padding: 6px 18px; font-size: 24px; background: #fff; color: var(--text); }
+.site .ctrl .main { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 800; padding: 6px 28px; }
+.site .ctrl small { font: 700 22px var(--font-code); color: var(--muted); }
+.site .timer { font: 800 26px var(--font-code); background: #1c2330; color: #fff; border-radius: 10px; padding: 2px 14px; } .site .timer.done { background: #b3261e; } .site .timer[hidden] { display: none; }
+.site .biglink { display: inline-block; background: var(--blue); color: #fff; font-size: 36px; font-weight: 800; border-radius: 18px; padding: 22px 44px; }
+.site .cell .nm { font-size: 24px; } .site .ds h3 { font-size: 26px; } .site .ds h3 code { font-size: 30px; }
+.site .tagnew { font-size: 22px; padding: 0 10px; }
+.site .ds.dense { padding: 12px 18px 14px; }
+.site .ds.dense .cell { padding: 1px 14px; margin-top: 4px; }

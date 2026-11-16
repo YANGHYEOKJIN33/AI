@@ -99,6 +99,22 @@ store.subscribe((state) => {
   root.style.setProperty('--scale', String(state.scale));
 });
 
+// 새 틀(index.html)에서 넘어올 때: practice.html?mode=algo&algo=kmeans&page=trace
+{
+  const p = new URLSearchParams(location.search);
+  const mode = p.get('mode');
+  if (['tools', 'algo', 'wrap'].includes(mode)) {
+    const patch = { mode };
+    const algo = p.get('algo');
+    if (mode === 'algo' && algo && algoPages(algo)) {
+      patch.algoTab = algo;
+      patch.algoStep = Math.max(0, algoPages(algo).findIndex((pg) => pg.id === p.get('page')));
+    }
+    store.set(patch);
+    history.replaceState(null, '', location.pathname);
+  }
+}
+
 onboarding.maybeShow();
 
 // 개발 중 확인용
