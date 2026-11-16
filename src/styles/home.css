@@ -1,0 +1,20 @@
+/* 수업 홈 — 차시 고르기 */
+body.home { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); font-size: clamp(15px, 1.15vw, 19px); line-height: 1.5; }
+.h-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px clamp(16px, 4vw, 56px); background: var(--surface); border-bottom: 1px solid var(--border); }
+.h-top h1 { margin: 0; font-size: 1.35em; }
+.home a { color: var(--current); }
+.home main { padding: 20px clamp(16px, 4vw, 56px) 32px; max-width: 1400px; margin: 0 auto; }
+.home h2 { font-size: 1.6em; margin: .4em 0 .7em; }
+.h-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.h-card { position: relative; display: flex; flex-direction: column; gap: 6px; border: 2px solid var(--border); border-radius: 16px; padding: 18px 20px; background: var(--surface); text-decoration: none; color: var(--text); }
+a.h-card:hover, a.h-card:focus-visible { border-color: var(--current); box-shadow: 0 0 0 4px var(--current-bg); }
+.h-card .n { font-weight: 800; color: var(--current); }
+.h-card .t { font-size: 1.35em; font-weight: 800; }
+.h-card .d { color: var(--text-muted); }
+.h-card.is-soon { opacity: .6; }
+.h-card .soon { position: absolute; top: 14px; right: 16px; font-size: .8em; background: var(--surface-2); border-radius: 999px; padding: 2px 10px; color: var(--text-muted); }
+.h-resume { background: var(--current-bg); border: 1px solid var(--current); border-radius: 12px; padding: 10px 16px; }
+.h-help { margin-top: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 4px 22px 10px; }
+.h-help h3 { margin: .8em 0 .2em; }
+.home kbd { border: 1px solid var(--border-strong); border-bottom-width: 3px; border-radius: 6px; padding: 0 .4em; font-family: var(--font-code); background: var(--surface); font-size: .9em; }
+.h-foot { text-align: center; color: var(--text-muted); font-size: .85em; padding: 16px; }

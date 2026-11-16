@@ -7,7 +7,6 @@
 import { el } from '../dom.js';
 import { createPlot } from '../plot.js';
 import { sbox, flowArrow, chip, mark } from '../structures.js';
-import { fmt } from '../../core/math.js';
 import { FOOD_LABELS, FOOD_AXES } from '../../core/datasets.js';
 
 const LABEL = Object.fromEntries(FOOD_LABELS.map((l, i) => [l.id, { ...l, cat: String(i + 1) }]));
@@ -63,7 +62,7 @@ export default {
     const cur = data.train.find((r) => r.id === ds.cur);
     if (cur && computed.has(cur.id)) {
       shapes.push({ key: 'dtext', kind: 'text', x: (q.x + cur.x) / 2, y: (q.y + cur.y) / 2, dy: -6,
-        text: `d = ${fmt(computed.get(cur.id).d)}`, cls: 'dtext' });
+        text: `d² = ${computed.get(cur.id).d2}`, cls: 'dtext' });
     } else if (cur) {
       shapes.push({ key: `l-${cur.id}`, kind: 'line', x1: q.x, y1: q.y, x2: cur.x, y2: cur.y, cls: 'dline is-cur is-measuring' });
     }
@@ -104,11 +103,11 @@ export default {
     const dist = ds.distances.map((d, i) => chip({
       flip: `d-${d.id}`, from: `row-${d.id}`, cat: LABEL[d.label].cat,
       cls: `tuple${nbIds.has(d.id) ? ' is-picked' : ''}${frame.action === 'append' && i === ds.distances.length - 1 ? ' is-new' : ''}`,
-      title: `${d.name}: 거리 ${fmt(d.d)}, 레이블 ${d.label}`,
+      title: `${d.name}: d² ${d.d2}, 레이블 ${d.label}`,
     },
     el('span.tuple__idx', {}, String(i)),
-    el('span.tuple__val', {}, `(${fmt(d.d)}, `, labelMark(d.label), ` ${d.label})`),
-    el('span.tuple__name', {}, `${d.name} · d² ${d.d2}`)));
+    el('span.tuple__val', {}, `(${d.d2}, `, labelMark(d.label), ` ${d.label})`),
+    el('span.tuple__name', {}, d.name)));
 
     // ③ neighbors — 앞 k개를 복사
     const nbs = ds.neighbors.map((n, i) => chip({
@@ -116,8 +115,8 @@ export default {
       cls: `tuple${ds.voting === n.id ? ' is-cur' : ''}`,
     },
     el('span.tuple__idx', {}, String(i)),
-    el('span.tuple__val', {}, `(${fmt(n.d)}, `, labelMark(n.label), ` ${n.label})`),
-    el('span.tuple__name', {}, `${n.name} · d² ${n.d2}`)));
+    el('span.tuple__val', {}, `(${n.d2}, `, labelMark(n.label), ` ${n.label})`),
+    el('span.tuple__name', {}, n.name)));
 
     // ④ votes — 키(레이블) : 값(표 수). 표 하나하나를 토큰으로 그려 이웃에서 날아오게 한다
     const counted = [];

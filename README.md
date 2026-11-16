@@ -1,20 +1,29 @@
-# 자료구조로 다시 보는 머신러닝 알고리즘
+# 자료구조로 배우는 머신러닝 알고리즘
 
-이미 배운 **k-최근접 이웃 · k-평균 · 선형회귀 · 의사결정트리**를
-의사코드 한 줄마다 **데이터가 어느 자료구조에서 어느 자료구조로 옮겨 가는지** 눈으로 따라가며
-복습하는 고등학생용 웹 학습 사이트입니다.
-
-[8-퍼즐 탐색 사이트](https://yanghyeokjin33.github.io/8puzzle/)와 같은 구조·화면 언어로 만들었습니다.
-8-퍼즐 사이트가 "OPEN이 큐냐 스택이냐가 탐색을 정한다"를 보여 줬듯, 이 사이트는
-**"어떤 자료구조로 데이터를 옮기느냐가 학습 알고리즘의 절차다"**를 보여 줍니다.
+**k-최근접 이웃 · k-평균 · 선형회귀 · 의사결정트리**를 교실 앞 화면에 띄워 놓고,
+의사코드 한 줄마다 **자료구조 안에서 데이터가 어떻게 바뀌는지** 한 박자씩 보여 주며 수업하는 교구입니다.
 
 ```
-https://yanghyeokjin33.github.io/Fundamentals-of-AI/
+https://yanghyeokjin33.github.io/AI/
 ```
 
-> `main` 브랜치에 병합되면 GitHub Actions가 자동으로 게시합니다 → [docs/DEPLOY.md](./docs/DEPLOY.md)
+| 쪽 | 무엇 |
+|---|---|
+| **수업 홈** (`index.html`) | 차시 고르기 · 이어서 하기 · 사용법 |
+| **수업 화면** (`class.html?l=knn`) | 16:9 큰 무대. 한 번 누르면 한 곳만 바뀌고, 아래 자막이 무엇이 바뀌었는지 말해 준다. 교사 노트(N) · 장면 목록(G) · 타이머(T) |
+| **교사용 자료** (`teacher.html`) | 차시 안내 · 활동지 · 정답지 · 수업 대본 — A4로 인쇄 |
+| **연습** (`practice.html`) | 학생이 혼자 해 보는 이전 화면 — 자료구조 도구 · 알고리즘 단계 · 추적표 · 시험 대비 연습 |
+
+- 지금 수업 화면으로 만든 것: **1차시 k-최근접 이웃(43장면)** — 시범 차시. 확인을 받은 뒤 2~6차시를 만듭니다.
+- 계획: **[PLAN-v3.md](./PLAN-v3.md)** · 차시별 장면: [docs/plan-v3/SCENES.md](./docs/plan-v3/SCENES.md)
+- 올릴 때마다 자동으로 게시되고, 화면 아래에 게시 날짜와 버전이 보입니다 → [docs/DEPLOY.md](./docs/DEPLOY.md)
 
 ---
+
+## 연습 화면 (이전 학습 사이트)
+
+아래는 `practice.html`의 설명입니다.
+
 
 ## 무엇을 복습하나요
 
@@ -75,7 +84,8 @@ https://yanghyeokjin33.github.io/Fundamentals-of-AI/
 빌드 도구도, 설치할 의존성도 없습니다.
 
 ```bash
-python3 -m http.server 8000   # http://localhost:8000
+python3 -m http.server 8000   # http://localhost:8000 (수업 홈)
 npm test                      # 알고리즘 검산·레슨·용어 테스트 (Node 내장 도구만)
-node scripts/smoke.mjs        # (선택) 모든 쪽을 브라우저로 훑어 콘솔 오류 확인 — playwright 필요
+node scripts/smoke.mjs        # (선택) 연습 화면의 모든 쪽을 브라우저로 훑어 콘솔 오류 확인 — playwright 필요
+node scripts/budget.mjs       # (선택) 수업 화면의 모든 박자: 글자 크기 · 넘침 · 글자 수 · 한 박자에 한 곳만 바뀌는지
 ```

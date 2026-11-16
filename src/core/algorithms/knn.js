@@ -11,6 +11,7 @@
  * 이 파일은 화면을 모른다. 의사코드 한 줄마다의 자료구조 모습(frames)만 만든다.
  */
 import { Recorder } from '../trace.js';
+import { josa } from '../josa.js';
 import { fmt } from '../math.js';
 import { FOODS, FOOD_QUERY, FOOD_LABELS, FOOD_QUERY_CANDIDATES } from '../datasets.js';
 
@@ -62,9 +63,9 @@ export function pseudo(params = defaults) {
   return [
     'distances ← 빈 리스트',
     '각 학습 데이터 (x, 레이블)에 대해 반복:',
-    '    d ← 거리(질문점 q, x)',
-    '    distances에 (d, 레이블)을 추가한다',
-    'distances를 d가 작은 순서로 정렬한다',
+    '    d² ← 거리 제곱(질문점 q, x)',
+    '    distances에 (d², 레이블)을 추가한다',
+    'distances를 d²이 작은 순서로 정렬한다',
     `이웃 ← distances의 앞에서 k개   (k = ${params.k})`,
     'votes ← 빈 딕셔너리',
     '각 이웃의 레이블마다 votes[레이블]을 1 늘린다',
@@ -76,9 +77,9 @@ export function pseudo(params = defaults) {
 export const notes = [
   '거리를 모아 둘 빈 리스트를 만들어요.',
   '학습 데이터를 표의 위에서부터 하나씩 돌아요. 그래서 distances에는 표 순서대로 들어가요.',
-  '질문점과 이 데이터 사이의 거리 d = √(Δx² + Δy²). 손으로 풀 땐 d²만 비교해도 순서가 같아요.',
-  '(거리, 레이블) 한 쌍을 리스트 맨 뒤에 붙여요. 원래 표는 그대로 두고 복사해 와요.',
-  '거리가 작은 것이 앞(0번)으로 오도록 정렬해요.',
+  '질문점과 이 데이터 사이의 거리 제곱 d² = Δx² + Δy². 어느 쪽이 가까운지는 √를 하지 않아도 순서가 같아요.',
+  '(d², 레이블) 한 쌍을 리스트 맨 뒤에 붙여요. 원래 표는 그대로 두고 복사해 와요.',
+  'd²이 작은 것이 앞(0번)으로 오도록 정렬해요.',
   '정렬된 리스트의 앞에서 k개만 잘라 와요. 이것이 "가장 가까운 k개 이웃"이에요.',
   '레이블별 표를 셀 빈 딕셔너리를 만들어요. 키 = 레이블, 값 = 표 수.',
   '이웃마다 자기 레이블 칸에 1표씩 더해요. 처음 나온 레이블이면 새 키가 생겨요.',
@@ -132,12 +133,11 @@ export function run(params = defaults) {
     ds.cur = row.id;
     rec.frame({
       line: 3, action: 'measure', phase: 0, ds,
-      narration: `${i + 1}번째 데이터 ${row.name}(${row.x}, ${row.y})까지의 거리를 잽니다: d² = ${d2}, d = ${fmt(d)}.`,
+      narration: `${i + 1}번째 데이터 ${row.name}(${row.x}, ${row.y})까지의 거리 제곱을 잽니다: d² = ${d2}.`,
       calc: {
         title: `📏 ${q.name}(${q.x}, ${q.y}) ↔ ${row.name}(${row.x}, ${row.y})`,
         rows: [
           `d² = (${q.x}−${row.x})² + (${q.y}−${row.y})² = ${dx * dx} + ${dy * dy} = ${d2}`,
-          `d  = √${d2} = ${fmt(d)}`,
         ],
       },
     });
@@ -145,7 +145,7 @@ export function run(params = defaults) {
     rec.frame({
       line: 4, action: 'append', phase: 0, ds,
       effects: [{ target: 'distances', op: '추가' }],
-      narration: `(${fmt(d)}, ${row.label})을 distances 맨 뒤 ${ds.distances.length - 1}번 칸에 추가합니다.`,
+      narration: `${josa(`(${d2}, ${row.label})`, '을')} distances 맨 뒤 ${ds.distances.length - 1}번 칸에 추가합니다.`,
     });
   });
 
@@ -160,12 +160,12 @@ export function run(params = defaults) {
   rec.frame({
     line: 5, action: 'sort', phase: 1, ds,
     effects: [{ target: 'distances', op: '정렬' }],
-    narration: `distances를 거리가 작은 순으로 정렬합니다. 0번은 ${nearest.name}(d² = ${nearest.d2}).`,
+    narration: `distances를 d²이 작은 순으로 정렬합니다. 0번은 ${nearest.name}(d² = ${nearest.d2}).`,
     ask: {
       q: '🔮 정렬하면 distances의 0번(맨 앞)에 올 음식은?',
       options: optionItems.map((x) => x.name),
       answer: optionItems.indexOf(nearest),
-      why: `d²이 가장 작은 ${nearest.name}(d² = ${nearest.d2})이 맨 앞으로 와요.`,
+      why: `d²이 가장 작은 ${josa(`${nearest.name}(d² = ${nearest.d2})`, '이')} 맨 앞으로 와요.`,
     },
     calc: {
       title: '🔃 d²을 비교해 작은 것부터',
@@ -218,7 +218,7 @@ export function run(params = defaults) {
   rec.frame({
     line: 9, action: 'result', phase: 3, ds,
     effects: [{ target: 'result', op: '가장 많은 것' }],
-    narration: `votes에서 표가 가장 많은 "${best.label}"(${best.count}표)이 예측 결과입니다.`,
+    narration: `votes에서 표가 가장 많은 ${josa(`"${best.label}"(${best.count}표)`, '이')} 예측 결과입니다.`,
     ask: {
       q: `🔮 k = ${k}일 때 ${q.name}의 예측 레이블은?`,
       options: LABEL_ORDER.slice(),

@@ -41,7 +41,7 @@ export function createSummaryRoom({ store, onGlossary }) {
       el('div.troom__head', {},
         el('span.troom__icon', { 'aria-hidden': 'true' }, '🗂'),
         el('div.troom__titles', {}, el('h3.troom__title', {}, '네 알고리즘 한 장 정리'),
-          el('p.troom__rule', {}, '표의 줄을 누르면 그 알고리즘의 ①쪽으로 돌아가요.'))),
+          el('p.troom__rule', {}, '표의 줄을 누르면 그 알고리즘의 첫 쪽(문제 보기)으로 돌아가요.'))),
       el('div.matrixwrap', {},
         el('table.matrix.matrix--summary', {},
           el('thead', {}, el('tr', {},

@@ -1,17 +1,18 @@
 # 배포 안내 — GitHub Pages
 
 서버 없이 **GitHub Pages**로 게시한다(8-퍼즐 사이트와 같은 방식).
-`main` 브랜치에 push(또는 병합)하면 `.github/workflows/deploy.yml`이 저장소 내용을 그대로 사이트로 올린다.
+개발 브랜치 `claude/busy-albattani-x9og7b`(또는 `main`)에 push하면 `.github/workflows/deploy.yml`이 저장소 내용을 그대로 사이트로 올린다.
+게시할 때 `version.json`(커밋 · 날짜)을 만들어, 수업 홈과 연습 화면 아래에 **게시 날짜와 버전**이 보인다.
+(2026-11 이전에는 `main`에서만 게시되어 공개 주소가 10월 23일 버전에 멈춰 있었다 — PLAN-v3 2.1절)
 
 ## 사이트 주소
 
 ```
-https://yanghyeokjin33.github.io/Fundamentals-of-AI/
+https://yanghyeokjin33.github.io/AI/
 ```
 
 ## 처음 한 번
 
-1. 개발 브랜치를 `main`에 병합한다 (저장소에 `main`이 없다면 개발 브랜치에서 `main`을 만든다).
 2. 워크플로의 `configure-pages` 단계에 `enablement: true`를 주었기 때문에 보통은 Pages가 자동으로 켜진다.
 3. 아래 오류로 실패하면 저장소 소유자가 한 번만 직접 켠다.
 

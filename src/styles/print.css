@@ -1,0 +1,25 @@
+/* 교사용 자료 — 화면에서는 A4 미리보기, 인쇄하면 A4 그대로 */
+body.teacher { margin: 0; background: #c9ced6; font-family: var(--font-ui); color: #111; }
+.t-bar { position: sticky; top: 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 10px 16px; background: #fff; border-bottom: 1px solid #ccc; font-size: 15px; z-index: 2; }
+.t-bar .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.t-bar button, .t-bar select { font: inherit; padding: 4px 12px; border-radius: 8px; border: 1px solid #aaa; background: #fff; cursor: pointer; }
+.t-bar button.on { background: #1857c4; color: #fff; border-color: #1857c4; }
+.t-bar a { color: #1857c4; }
+.page { width: 210mm; min-height: 297mm; margin: 16px auto; background: #fff; padding: 14mm 15mm; box-sizing: border-box; font-size: 11.5pt; line-height: 1.45; }
+.page h1 { font-size: 17pt; margin: 4px 0 6px; }
+.page h2 { font-size: 12pt; margin: 12px 0 5px; }
+.page .meta { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 5px; font-size: 10.5pt; }
+.page table { border-collapse: collapse; width: 100%; font-size: 10.5pt; }
+.page th, .page td { border: 1.2px solid #333; padding: 4px 6px; text-align: center; height: 24px; }
+.page th { background: #eee; }
+.page .hint { color: #555; font-size: 9.5pt; margin: 0 0 4px; }
+.page .boxes { display: flex; gap: 5px; }
+.page .boxes > span { flex: 1; border: 1.2px solid #333; height: 54px; display: flex; flex-direction: column; align-items: center; padding: 2px 2px 3px; font-size: 9pt; line-height: 1.25; text-align: center; }
+.page .boxes i { align-self: flex-start; font-style: normal; font-size: 8.5pt; color: #555; }
+.page .lines { border: 1.2px solid #333; padding: 6px; }
+.page .answers span { margin-right: 24px; }
+.page .ans { color: #b3261e; font-weight: 700; }
+.page.script table { font-size: 9pt; } .page.script td { text-align: left; vertical-align: top; } .page.script td:first-child, .page.script td:last-child { text-align: center; }
+.page.script .watch { color: #8a5a00; margin-top: 3px; }
+@page { size: A4; margin: 0; }
+@media print { body.teacher { background: #fff; } .no-print { display: none !important; } .page { margin: 0; box-shadow: none; } .page.script tr { break-inside: avoid; } }

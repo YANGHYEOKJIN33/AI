@@ -2,7 +2,7 @@
 
 - **문서 버전**: v2.1 (로드맵 1~11단계 완료 — 10장 수업 피드백, 11장 집중 보기)
 - **작성일**: 2026-10-23
-- **저장소**: `yanghyeokjin33/Fundamentals-of-AI`
+- **저장소**: `YANGHYEOKJIN33/AI` (이전 이름 `Fundamentals-of-AI`)
 - **바탕이 된 프로젝트**: [`yanghyeokjin33/8puzzle`](https://yanghyeokjin33.github.io/8puzzle/) — 같은 구조·원칙·화면 언어를 따른다
 - **개발 브랜치**: `claude/busy-albattani-x9og7b`
 - **다음 계획**: [PLAN-v3.md](./PLAN-v3.md) — 수업 교구로 재구성하는 계획 (2026-11-15 수립, 개발 전)
@@ -295,7 +295,7 @@ test/       node:test — 알고리즘 정답 검산, 프레임 형식, 의사�
 | 선형회귀 학습법 | **경사하강법**(최소제곱 해는 비교값으로만) | 반복마다 변수가 바뀌는 "데이터 변화"가 뚜렷하다 |
 | 의사결정트리 기준 | 기본 **지니 불순도**, ③쪽에서 엔트로피로 바꿔 보기 | 두 교과서 표기를 모두 다룬다 |
 | 직접 코딩 | 하지 않음(의사코드↔파이썬 대조 + 핵심 한 줄 바꾸기) | 8-퍼즐 최종판과 같은 방침 |
-| 배포 주소 | `https://yanghyeokjin33.github.io/Fundamentals-of-AI/` | `main`에 병합되면 Actions가 게시 |
+| 배포 주소 | `https://yanghyeokjin33.github.io/AI/` | `main`에 병합되면 Actions가 게시 |
 
 ---
 

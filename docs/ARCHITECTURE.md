@@ -3,10 +3,34 @@
 빌드 도구·프레임워크 없이 **브라우저가 바로 읽는 HTML + CSS + ES 모듈**로 만든다(8-퍼즐 사이트와 같다).
 `index.html`을 정적 서버로 열면 그대로 동작하고, GitHub Pages에 올리는 것만으로 게시된다.
 
+## v3 수업 화면 (PLAN-v3 9장)
+
+```
+index.html                수업 홈 — 차시 고르기, 이어서 하기
+class.html?l=<차시>        수업 화면(16:9 무대)
+teacher.html?l=&v=        교사용 자료 — 차시 안내 · 활동지 · 정답지 · 수업 대본 (인쇄)
+practice.html             연습 — 아래 "폴더"에 적힌 이전 학습 사이트
+src/deck/
+  engine.js               장면 · 박자 진행, 주소(#장면.박자) — 화면 없이 테스트
+  stage.js                무대 맞춤(1600×900을 통째로 확대·축소), 키 · 리모컨 · 터치, 교사 노트, 장면 목록, 타이머
+  motion.js               데이터 이동(data-flip · data-from) — 무대 배율을 고려
+  parts.js kit.js         큰 부품(상자 · 칸 · 계산 · 보기)과 장면 틀(표지 · 설명 · 질문 · 활동 · 지도 · 확인 문제 · 정리)
+src/lessons/
+  index.js                차시 목록 (ready: 만든 차시)
+  knn.js                  1차시 — 장면 43개 + 활동지 · 확인 문제. 숫자는 엔진 실행 기록에서 가져온다
+  check.js                교실 가독성 점검
+src/print/teacher.js      교사용 자료 만들기
+src/core/josa.js          받침에 맞는 조사(은/는 · 이/가 …)
+scripts/budget.mjs        모든 박자: 가장 작은 글자 ≥ 무대 높이 2.4% · 넘침 0 · 글자 ≤ 250자 · 한 박자에 한 곳만
+```
+
+장면 = `{ id, sec, part, kind, title, beats, render(beat) → { line, main, cap, timer }, note: { say, ask, expect, watch, min } }`.
+한 박자에는 "지금 줄"(의사코드) 또는 "가운데" 중 한 곳만 바뀐다(`budget.mjs`가 검사).
+
 ## 폴더
 
 ```
-index.html                 화면 뼈대 — 빈 패널만 두고 내용은 JS가 채운다
+practice.html              연습 화면 뼈대 — 빈 패널만 두고 내용은 JS가 채운다
 .nojekyll                  GitHub Pages가 파일을 그대로 올리도록
 src/
   core/                    순수 로직 — 화면을 전혀 모른다 (node에서 테스트)

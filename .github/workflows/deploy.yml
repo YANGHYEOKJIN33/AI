@@ -1,11 +1,12 @@
-# GitHub Pages 자동 배포 (계획서 6장)
-# main 브랜치에 push하면 저장소 내용을 그대로 정적 사이트로 게시한다.
+# GitHub Pages 자동 게시
+# 개발 브랜치(또는 main)에 push하면 저장소 내용을 그대로 정적 사이트로 게시한다.
 # 빌드 도구가 없으므로 별도의 컴파일 단계가 필요 없다.
+# (PLAN-v3 8장 1번: 예전에는 main에서만 돌아 공개 주소가 첫 버전에 멈춰 있었다)
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/busy-albattani-x9og7b']
   workflow_dispatch:
 
 # 게시에 필요한 최소 권한만 준다
@@ -28,6 +29,11 @@ jobs:
     steps:
       - name: 저장소 내려받기
         uses: actions/checkout@v4
+
+      - name: 게시 정보 적기 (화면 아래에 보이는 버전·날짜)
+        run: |
+          printf '{"commit":"%s","date":"%s"}\n' "${GITHUB_SHA::7}" "$(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M')" > version.json
+          cat version.json
 
       - name: Pages 설정
         uses: actions/configure-pages@v5

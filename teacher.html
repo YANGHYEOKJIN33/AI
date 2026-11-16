@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>교사용 자료 — 자료구조로 배우는 머신러닝 알고리즘</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+  <link rel="stylesheet" href="./src/styles/tokens.css">
+  <link rel="stylesheet" href="./src/styles/print.css">
+</head>
+<body class="teacher">
+  <header class="t-bar no-print">
+    <a href="./index.html">← 수업 홈</a>
+    <select id="pick" aria-label="차시"></select>
+    <span class="tabs" id="tabs"></span>
+    <button type="button" onclick="print()">🖨 인쇄</button>
+  </header>
+  <main id="doc"></main>
+  <script type="module" src="./src/print/teacher.js"></script>
+</body>
+</html>

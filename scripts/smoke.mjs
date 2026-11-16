@@ -37,7 +37,7 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 390, height: 844 
   const page = await browser.newPage({ viewport });
   page.on('pageerror', (e) => errors.push(`${viewport.width}px pageerror: ${e}`));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`${viewport.width}px console: ${m.text()}`); });
-  await page.goto(url);
+  await page.goto(`${url}practice.html`);
   await page.evaluate(() => { localStorage.clear(); localStorage.setItem('ml-ds-review:seen-guide', '1'); });
   await page.reload();
   await page.waitForFunction(() => globalThis.__mlds);
