@@ -15,7 +15,7 @@ https://yanghyeokjin33.github.io/AI/
 | **연습** (`practice.html`) | 학생이 혼자 해 보는 이전 화면 — 자료구조 도구 · 알고리즘 단계 · 추적표 · 시험 대비 연습 |
 
 - 지금 수업 화면으로 만든 것: **1차시 k-최근접 이웃(43장면)** — 시범 차시. 확인을 받은 뒤 2~6차시를 만듭니다.
-- 계획: **[PLAN-v3.md](./PLAN-v3.md)** · 차시별 장면: [docs/plan-v3/SCENES.md](./docs/plan-v3/SCENES.md)
+- 계획: **[PLAN-v4.md](./PLAN-v4.md)**(화면 형태 변경 — 사이트 형태 유지, 개발 전) · [PLAN-v3.md](./PLAN-v3.md) · 차시별 장면: [docs/plan-v3/SCENES.md](./docs/plan-v3/SCENES.md)
 - 올릴 때마다 자동으로 게시되고, 화면 아래에 게시 날짜와 버전이 보입니다 → [docs/DEPLOY.md](./docs/DEPLOY.md)
 
 ---
