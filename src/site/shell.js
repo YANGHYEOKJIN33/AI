@@ -52,6 +52,7 @@ export function mountSite(root, { tabs, otherTabs }) {
 
   // ── 이동
   const page = () => tab.pages[pi];
+  function switchTab(t) { if (t === tab) return; tab = t; pi = 0; si = 0; view = 'data'; showAll = false; paint({ fresh: true }); }
   function go(p, s, { animate = false } = {}) {
     if (p < 0 || p >= tab.pages.length) return;
     const samePage = p === pi;
@@ -67,8 +68,9 @@ export function mountSite(root, { tabs, otherTabs }) {
     const pg = page(); const st = pg.steps[si];
     fill(tabsBar, el('a.site', { href: './index.html' }, '자료구조로 배우는 머신러닝'),
       el('a.tab', { href: './practice.html?mode=tools' }, '📦 도구'), el('span.tab.on', {}, '🤖 알고리즘'), el('a.tab', { href: './practice.html?mode=wrap' }, '✅ 정리'), el('span.sep', {}, '|'),
-      tabs.map((t) => el(`span.sub${t === tab ? '.on' : ''}`, {}, `${t.emoji} ${t.name}`)),
+      tabs.map((t) => el(`button.sub${t === tab ? '.on' : ''}`, { type: 'button', onclick: () => switchTab(t) }, `${t.emoji} ${t.name}`)),
       otherTabs.map((t) => el('a.sub', { href: t.href, title: '아직 이전 화면입니다' }, `${t.emoji} ${t.name}`)));
+    dots.classList.toggle('many', tab.pages.length > 10);
     fill(dots, tab.pages.map((p, i) => el(`button${i === pi ? '.on' : i < pi ? '.done' : ''}`, { type: 'button', title: p.title, 'aria-label': `${i + 1}쪽 ${p.title}`, onclick: () => go(i, 0) }, String(i + 1))));
     title.textContent = `${pi + 1}. ${pg.title}`; sentence.textContent = pg.sentence;
 
@@ -79,7 +81,7 @@ export function mountSite(root, { tabs, otherTabs }) {
         el('span.ptab', {}, btn(showAll ? '이 쪽 줄만' : '전체 보기', () => { showAll = !showAll; paint(); })));
       const shown = tab.code.map((t, i) => ({ t, n: i + 1 })).filter(({ n }) => showAll || (n >= a && n <= z));
       const indent = Math.min(...shown.map(({ t }) => t.match(/^ */)[0].length));
-      fill(leftBody, el('ol.code', {}, shown.map(({ t, n }) => el(`li${n === st.on ? '.on' : ''}${n < a || n > z ? '.off' : ''}`, {}, el('span.no', {}, String(n)),
+      fill(leftBody, el(`ol.code${shown.length > 5 ? '.long' : ''}`, {}, shown.map(({ t, n }) => el(`li${n === st.on ? '.on' : ''}${n < a || n > z ? '.off' : ''}`, {}, el('span.no', {}, String(n)),
         (st.k ? t.replace(`k = ${tab.k}`, `k = ${st.k}`) : t).slice(indent)))), st.left ? st.left() : null);
     } else {
       fill(leftHead, el('b', {}, pg.leftTitle ?? '개념'), pg.link ? '' : '한 번 누를 때마다 하나씩');
@@ -130,5 +132,5 @@ export function mountSite(root, { tabs, otherTabs }) {
   });
 
   fit(); paint();
-  return { go, forward, back, pos: () => ({ tab: tab.id, page: pi, step: si, pages: tab.pages.length, steps: page().steps.length }), tabs };
+  return { go, forward, back, switchTab: (id) => switchTab(tabs.find((t) => t.id === id) ?? tab), pos: () => ({ tab: tab.id, page: pi, step: si, pages: tab.pages.length, steps: page().steps.length }), tabs };
 }

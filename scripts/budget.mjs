@@ -42,8 +42,11 @@ const problems = [];
 let steps = 0;
 const tabs = await page.evaluate(() => globalThis.__site.tabs.map((t) => ({ id: t.id, pages: t.pages.map((p) => p.steps.length) })));
 for (const tab of tabs) {
+  await page.evaluate((id) => globalThis.__site.switchTab(id), tab.id);
   for (let p = 0; p < tab.pages.length; p += 1) {
     await page.evaluate((p) => globalThis.__site.go(p, 0), p);
+    const here = await page.evaluate(() => globalThis.__site.pos());
+    if (here.tab !== tab.id || here.page !== p) problems.push(`${tab.id} ${p + 1}쪽으로 가지 못함`);
     let prev = null;
     for (let s = 0; s < tab.pages[p]; s += 1) {
       if (s > 0) await page.keyboard.press('ArrowRight');
@@ -69,7 +72,7 @@ for (const tab of tabs) {
         for (const z of ['zone-left', 'zone-right']) { const b = document.getElementById(z); const br = b.getBoundingClientRect();
           for (const c of b.children) { const r = c.getBoundingClientRect(); if (r.right > br.right + 2 || r.bottom > br.bottom + 2 || r.left < br.left - 2 || r.top < br.top - 2) over.push(`${z} 넘침`); } }
         const cap = document.getElementById('zone-cap'); if (cap.scrollWidth > cap.clientWidth + 2) over.push('아래 띠 잘림');
-        const sig = (id) => { const z = document.getElementById(id); return z.innerText + '|' + z.querySelectorAll('.hidden').length + '|' + z.querySelectorAll('.hot,.new,.cur,.pick,.win,.on,.right,.off,.dimmed').length + '|' + (z.querySelector('svg.plot')?.innerHTML.length ?? 0); };
+        const sig = (id) => { const z = document.getElementById(id); return z.innerText + '|' + z.querySelectorAll('.hidden').length + '|' + z.querySelectorAll('.hot,.new,.cur,.pick,.win,.on,.right,.off,.dimmed').length + '|' + (z.querySelector('svg.plot')?.textContent ?? '') + (z.querySelector('svg.plot .plot__shapes')?.childElementCount ?? 0); };
         return { small: [...new Set(small)].slice(0, 3), over: [...new Set(over)].slice(0, 3), chars, left: sig('zone-left'), right: sig('zone-right'),
           boxes: document.querySelectorAll('#zone-right .ds:not(.hidden)').length, buttons: [...document.querySelectorAll('.ctrl button')].length };
       }, { MIN_PX });

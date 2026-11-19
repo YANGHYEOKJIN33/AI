@@ -57,3 +57,25 @@
 .site .tagnew { font-size: 22px; padding: 0 10px; }
 .site .ds.dense { padding: 12px 18px 14px; }
 .site .ds.dense .cell { padding: 1px 14px; margin-top: 4px; }
+
+.site .dots.many { gap: 4px; } .site .dots.many button { width: 30px; height: 30px; font-size: 22px; }
+.site button.sub { background: transparent; font-size: 24px; }
+/* 집 칩 · 묶음 두 개 (k-평균) · 기록 칩 */
+.site .hrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.site .hchip { display: inline-flex; align-items: baseline; gap: 2px; border: 3px solid var(--linec); border-radius: 999px; padding: 2px 14px; font: 700 26px var(--font-ui); background: #fff; white-space: nowrap; }
+.site .hchip small { font: 400 22px var(--font-code); color: var(--muted); }
+.site .hchip.c1 { border-color: var(--c1); color: var(--c1); } .site .hchip.c2 { border-color: var(--c2); color: var(--c2); }
+.site .hchip.cur { box-shadow: 0 0 0 6px var(--blue-bg); background: var(--blue-bg); }
+.site .hchip.moved { border-style: dashed; }
+.site .hchip.new { border-color: var(--green); background: var(--green-bg); }
+.site .bins2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.site .bin2 { border: 3px solid currentColor; border-radius: 14px; padding: 6px 10px 10px; min-height: 96px; }
+.site .bin2.c1 { color: var(--c1); background: var(--c1bg); } .site .bin2.c2 { color: var(--c2); background: var(--c2bg); }
+.site .binhead { display: flex; justify-content: space-between; font: 800 24px var(--font-ui); margin-bottom: 6px; }
+.site .binhead span { font-weight: 400; color: var(--muted); }
+.site .kv { margin-top: 8px; }
+.site .kv code { font: 700 30px var(--font-code); }
+.site .code.long { gap: 2px; } .site .code.long li { padding: 3px 12px; font-size: 22px; }
+.deck .shape-text.residual-text { font-size: 12.5px; }
+.deck .shape-text.eq { font-size: 12.5px; }
+.deck .pt.centroid .pt__label { font-size: 12.5px; }

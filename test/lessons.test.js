@@ -104,18 +104,35 @@ test('1차시: 화면 글에 받침과 맞지 않는 조사가 없다', async ()
   }
 });
 
-test('사이트 틀(v4) k-NN 탭: 쪽 10개, 모든 단계가 그려지고 교사 노트가 있다', async () => {
-  const { tab } = await import('../src/site/knn.js');
-  assert.equal(tab.pages.length, 10);
-  assert.equal(new Set(tab.pages.map((p) => p.id)).size, 10);
-  for (const pg of tab.pages) {
-    assert.ok(pg.title && pg.sentence && pg.sentence.length <= 40, `${pg.id} 쪽 설명은 한 문장`);
-    assert.ok(pg.steps.length >= 1);
-    assert.ok(pg.steps[0].note?.say, `${pg.id} 교사 노트`);
-    pg.steps.forEach((st, i) => {
-      if (st.left) st.left(); if (st.right) st.right(); if (st.plot) st.plot();
-      assert.ok(st.right, `${pg.id} ${i + 1}단계 오른쪽 칸`);
-      if (pg.code && st.on !== null) assert.ok(st.on >= pg.code[0] && st.on <= pg.code[1], `${pg.id} ${i + 1}단계 지금 줄 ${st.on}`);
-    });
+for (const [id, pagesWant] of [['knn', 10], ['kmeans', 10], ['linreg', 15]]) {
+  test(`사이트 틀(v4) ${id} 탭: 쪽 ${pagesWant}개, 모든 단계가 그려지고 교사 노트가 있다`, async () => {
+    const { tab } = await import(`../src/site/${id}.js`);
+    assert.equal(tab.pages.length, pagesWant);
+    assert.equal(new Set(tab.pages.map((p) => p.id)).size, pagesWant);
+    for (const pg of tab.pages) {
+      assert.ok(pg.title && pg.sentence && pg.sentence.length <= 40, `${pg.id} 쪽 설명은 한 문장`);
+      assert.ok(pg.steps.length >= 1);
+      assert.ok(pg.steps[0].note?.say, `${pg.id} 교사 노트`);
+      pg.steps.forEach((st, i) => {
+        if (st.left) st.left(); if (st.right) st.right(); if (st.plot) st.plot();
+        assert.ok(st.right, `${pg.id} ${i + 1}단계 오른쪽 칸`);
+        if (pg.code && st.on !== null) assert.ok(st.on >= pg.code[0] && st.on <= pg.code[1], `${pg.id} ${i + 1}단계 지금 줄 ${st.on}`);
+      });
+    }
+  });
+}
+
+test('k-평균 · 선형회귀 탭: 확인 문제와 활동지 답이 엔진 계산과 같다', async () => {
+  const km = await import('../src/site/kmeans.js');
+  assert.deepEqual(km.checks.map((c) => c.opts[c.answer]), ['집1 · 집4 · 집5 · 집6', '3회차', '집1']);
+  assert.equal(km.lesson.sheet.sections[0].rows[0][2].answer, '(2, 3)');
+  assert.equal(km.lesson.sheet.sections[2].rows.length, 3);
+  const lr = await import('../src/site/linreg.js');
+  assert.deepEqual(lr.checks.map((c) => c.opts[c.answer]), ['35', '−39.2', '1.96']);
+  assert.equal(lr.lesson.sheet.sections[1].rows[0][2].answer, '16.4');
+  assert.equal(lr.lesson.sheet.sections[2].rows[0][4].answer, '3.92');
+  for (const l of [km.lesson, lr.lesson]) {
+    assert.ok(l.scenes.length > 10);
+    for (const c of l.checks) assert.equal(new Set(c.opts).size, c.opts.length, c.q);
   }
 });

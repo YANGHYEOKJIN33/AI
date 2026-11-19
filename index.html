@@ -17,10 +17,12 @@
   <script type="module">
     import { mountSite } from './src/site/shell.js';
     import { tab as knn } from './src/site/knn.js';
+    import { tab as kmeans } from './src/site/kmeans.js';
+    import { tab as linreg } from './src/site/linreg.js';
     // 아직 새 틀로 옮기지 않은 알고리즘은 이전 화면(연습)으로 연다 — PLAN-v4 B · C단계
-    const otherTabs = [['kmeans', '🎯', 'k-평균'], ['linreg', '📈', '선형회귀'], ['dtree', '🌳', '결정트리']]
+    const otherTabs = [['dtree', '🌳', '결정트리']]
       .map(([id, emoji, name]) => ({ emoji, name, href: `./practice.html?mode=algo&algo=${id}` }));
-    globalThis.__site = mountSite(document.getElementById('site-root'), { tabs: [knn], otherTabs });
+    globalThis.__site = mountSite(document.getElementById('site-root'), { tabs: [knn, kmeans, linreg], otherTabs });
   </script>
 </body>
 </html>

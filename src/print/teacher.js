@@ -7,8 +7,8 @@ import { LESSONS, findLesson } from '../lessons/index.js';
 
 const params = new URLSearchParams(location.search);
 const TABS = [['guide', '차시 안내'], ['sheet', '활동지'], ['answers', '정답지'], ['script', '수업 대본']];
-const ready = LESSONS.filter((l) => l.ready);
-const lessonId = findLesson(params.get('l'))?.ready ? params.get('l') : ready[0].id;
+const ready = LESSONS.filter((l) => l.ready || l.teacher);
+const lessonId = ready.some((l) => l.id === params.get('l')) ? params.get('l') : ready[0].id;
 const view = TABS.some(([k]) => k === params.get('v')) ? params.get('v') : 'guide';
 
 const go = (patch) => { const p = new URLSearchParams(location.search); for (const [k, v] of Object.entries(patch)) p.set(k, v); location.search = p.toString(); };

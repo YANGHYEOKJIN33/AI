@@ -15,6 +15,7 @@ import { FOOD_AXES } from '../core/datasets.js';
 import { josa } from '../core/josa.js';
 import { dsBox, cell, pairValue, calcLines, labelMark, labelInfo, plotBox } from '../deck/parts.js';
 import { checks } from '../lessons/knn.js';
+import { page, hide, lines, arrowRight as arrowR, tag, wrapPage, practicePages, codeOf } from './common.js';
 
 const algo = ALGORITHMS.knn;
 const run = algo.run(algo.defaults);
@@ -32,18 +33,7 @@ const k1 = resultOf(1);
 const k5 = resultOf(5);
 const votesText = (votes) => `{ ${votes.map((v) => `${v.label}: ${v.count}`).join(', ')} }`;
 const sq = (f) => ({ dx2: (q.x - f.x) ** 2, dy2: (q.y - f.y) ** 2 });
-export const CODE = algo.pseudo(run.params).map((t) => t.replace(/(\S)\s{2,}/g, '$1  ').replace(/^ {4}/, '  '));
-
-/* ───────────── 쪽을 만드는 도우미: 앞 단계의 모습을 이어받아 바뀐 것만 적는다 ───────────── */
-function page(def, build) {
-  const steps = [];
-  let cur = { on: null, left: null, right: null, plot: null, note: null };
-  const step = (patch) => { cur = { ...cur, cap: null, capLabel: null, ask: null, timer: null, ...patch }; steps.push(cur); };
-  build(step);
-  return { ...def, steps };
-}
-const hide = (node, shown) => { if (!shown) node.classList.add('hidden'); return node; };
-const lines = (items, n, style = '') => el('div.col', { style: `gap:20px; ${style}` }, items.map((it, i) => hide(typeof it === 'string' ? el('p.lead', {}, it) : it, i < n)));
+export const CODE = codeOf(algo.pseudo(run.params));
 
 /* ───────────── 이 탭의 부품 ───────────── */
 /** 원본은 표 전체가 아니라 지금 읽는 줄 하나 */
@@ -52,7 +42,7 @@ const rowCard = (i) => dsBox({ name: '학습 데이터', kind: `${i + 1}번째 �
     el('span.v', { style: 'font-family:var(--font-ui)' }, foods[i].name),
     el('span.nm', { style: 'margin:0; color:var(--text)' }, `단맛 ${foods[i].x} · 아삭함 ${foods[i].y}`),
     el('span.v', { style: 'font-family:var(--font-ui); font-size:28px' }, labelMark(foods[i].label))));
-const arrowRight = () => el('div', { html: '<svg width="56" height="40" viewBox="0 0 110 70"><path d="M4 35h78" stroke="#1857c4" stroke-width="14" stroke-linecap="round"/><path d="M66 10l34 25-34 25" fill="none" stroke="#1857c4" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></svg>' });
+const arrowRight = () => arrowR();
 
 function distBox(items, { fresh = -1, hot = false, hidden = false, width = 520 } = {}) {
   return hide(dsBox({ name: 'distances', kind: `리스트 · ${items.length}칸`, hot, dense: true, width },
@@ -70,7 +60,6 @@ function strip(items, { prefix, from = null, pick = () => false, dim = false, hi
   }, String(d.d2), el('small', { style: 'font-size:22px' }, d.name)))), !hidden);
 }
 const stripIx = (hl = () => false, shown = true) => hide(el('div.stripix', { style: 'gap:8px; width:100%; font-size:22px;' }, sorted.map((_, i) => el('span', hl(i) ? { style: 'color:var(--blue)' } : {}, `[${i}]`))), shown);
-const tag = (text, color = 'var(--muted)') => el('div.small', { style: `font-weight:700; color:${color}` }, text);
 
 function neighborBox(items, cur = -1) {
   return dsBox({ name: '이웃', kind: `리스트 · ${items.length}칸`, dense: true, width: 400 },
@@ -257,32 +246,12 @@ function steps_ask(s, text) { s({ ask: text }); }
 }
 
 // 8 정리 · 확인 문제
-{
-  const points = [['모든 학습 데이터까지 d²을 재서 ', el('b', {}, '리스트 맨 뒤에'), ' 붙인다 — 표 순서대로 쌓인다.'], [el('b', {}, '정렬'), '해야 가까운 순서가 된다. 앞에서 k개 = [0] ~ [k−1].'], ['이웃의 레이블을 ', el('b', {}, '딕셔너리'), '로 세어, 값이 가장 큰 키가 예측이다.']];
-  const left = (n) => () => lines([el('div.label', {}, '오늘 정리'), ...points.map((p, i) => el('p.lead', { style: 'font-size:28px' }, `${'①②③'[i]} `, p)), el('p.lead.or', { style: 'font-size:28px' }, '다음 시간: 레이블이 없는 데이터는 어떻게 묶을까?')], n);
-  const flow = () => el('div.col', { style: 'gap:14px; align-items:center;' }, ['표', 'distances (추가)', '정렬', `이웃 (앞에서 ${K}개)`, 'votes (세기)', '예측'].flatMap((t, i) => [i ? el('div', { style: 'color:var(--blue); font-size:26px; line-height:1' }, '⬇') : null, el('span.pill', {}, t)]));
-  const quiz = (c, i, done) => () => el('div.col', { style: 'gap:14px; width:100%;' },
-    el('div.label', { style: 'font-size:26px' }, `📝 확인 문제 ${i + 1} / ${checks.length} — 활동지 ⑤번에 답을 적으세요`),
-    el('p.lead', { style: 'font-size:30px; font-weight:800;' }, c.q),
-    el('div.col', { style: 'gap:8px;' }, c.opts.map((o, j) => el(`div.opt${done ? (j === c.answer ? '.right' : '.off') : ''}`, { style: 'text-align:left; font-size:26px; padding:6px 18px; font-family:var(--font-code);' }, `${'①②③④'[j]} `, o))));
-  P.push(page({ id: 'wrap', title: '정리 · 확인 문제', sentence: '세 문장으로 정리하고, 확인 문제 3개를 풀어요.', code: null, leftTitle: '정리' }, (s) => {
-    s({ left: left(1), right: flow, note: { say: '오늘 데이터가 지나간 상자를 순서대로 다시 짚고, 세 문장을 학생이 소리 내어 읽게 합니다.', ask: '정렬을 빼먹으면 어떤 일이 생길까요?', expect: '앞에서 k개가 가장 가까운 k개가 아니게 된다.' } });
-    s({ left: left(2) }); s({ left: left(3) }); s({ left: left(4) });
-    checks.forEach((c, i) => {
-      s({ right: quiz(c, i, false), note: { say: '활동지 ⑤번에 답을 적게 한 뒤 정답을 보여 줍니다.', ask: '왜 그 답인가요?', expect: `${'①②③④'[c.answer]} — ${c.why}` } });
-      s({ right: quiz(c, i, true), cap: [`${'①②③④'[c.answer]} ${c.opts[c.answer]}`], capLabel: '정답' });
-    });
-    s({ left: left(5) });
-  }));
-}
-
-// 9 · 10 추적표 · 시험 대비 연습 — 지금은 연습 화면의 것을 연다 (PLAN-v4 D단계에서 이 틀로 옮긴다)
-const linkPage = (id, title, sentence, pageId, text) => page({ id, title, sentence, code: null, leftTitle: '연습', link: true }, (s) => {
-  s({ left: () => lines([el('h2', { style: 'font-size:40px' }, title), el('p.lead', { style: 'font-size:28px' }, text)], 2),
-    right: () => el('a.biglink', { href: `./practice.html?mode=algo&algo=knn&page=${pageId}` }, `${title} 열기 →`),
-    note: { say: text, ask: '—', expect: '—' } });
-});
-P.push(linkPage('trace', '추적표로 정리', '시험처럼 표를 직접 채워 봐요.', 'trace', '칸의 "?"를 먼저 스스로 계산하고, 눌러서 확인합니다. k와 질문점을 바꿔 다시 풀 수 있어요.'));
-P.push(linkPage('exam', '시험 대비 연습', '기말고사와 같은 형식의 문제예요.', 'exam', '조건이 바뀌는 문제를 한 문제씩 풀고, 틀리면 그 장면으로 돌아가 확인합니다.'));
+P.push(wrapPage({
+  points: [['모든 학습 데이터까지 d²을 재서 ', el('b', {}, '리스트 맨 뒤에'), ' 붙인다 — 표 순서대로 쌓인다.'], [el('b', {}, '정렬'), '해야 가까운 순서가 된다. 앞에서 k개 = [0] ~ [k−1].'], ['이웃의 레이블을 ', el('b', {}, '딕셔너리'), '로 세어, 값이 가장 큰 키가 예측이다.']],
+  next: '다음 시간: 레이블이 없는 데이터는 어떻게 묶을까?',
+  flow: ['표', 'distances (추가)', '정렬', `이웃 (앞에서 ${K}개)`, 'votes (세기)', '예측'], checks,
+  note: { say: '오늘 데이터가 지나간 상자를 순서대로 다시 짚고, 세 문장을 학생이 소리 내어 읽게 합니다.', ask: '정렬을 빼먹으면 어떤 일이 생길까요?', expect: '앞에서 k개가 가장 가까운 k개가 아니게 된다.' },
+}));
+P.push(...practicePages('knn'));
 
 export const tab = { id: 'knn', name: 'k-NN', emoji: '📍', full: 'k-최근접 이웃', code: CODE, k: K, pages: P };
