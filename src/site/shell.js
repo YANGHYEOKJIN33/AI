@@ -20,8 +20,14 @@ export function mountSite(root, { tabs, otherTabs }) {
   // ── 주소 · 이어서 하기:  #knn/3.5 = k-NN 탭 3쪽의 5번째 단계
   const parse = (h) => { const m = /^#?(\w+)\/(\d+)(?:\.(\d+))?$/.exec(h ?? ''); if (!m) return null; const t = tabs.find((x) => x.id === m[1]); if (!t) return null;
     const p = Math.min(t.pages.length, Math.max(1, +m[2])) - 1; return { t, p, s: Math.min(t.pages[p].steps.length, Math.max(1, +(m[3] ?? 1))) - 1 }; };
-  const saved = parse(location.hash) ?? parse((() => { try { return localStorage.getItem(KEY); } catch { return null; } })());
-  if (saved) { tab = saved.t; pi = saved.p; si = saved.s; }
+  // 사이트는 늘 첫 쪽에서 시작한다. 주소에 위치(#knn/3.5)를 직접 적어 열 때만 그 자리로 간다.
+  // 지난번에 멈춘 곳은 자동으로 가지 않고, 첫 화면 아래 띠에 [이어서 하기]로만 보여 준다.
+  const linked = parse(location.hash);
+  if (linked) { tab = linked.t; pi = linked.p; si = linked.s; }
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+  const savedRaw = (() => { try { return localStorage.getItem(KEY); } catch { return null; } })();
+  let resume = linked ? null : parse(savedRaw);
+  if (resume && resume.t === tab && resume.p === 0 && resume.s === 0) resume = null;
 
   // ── 뼈대
   const tabsBar = el('div.tabs'); const dots = el('div.dots'); const title = el('h2'); const sentence = el('p');
@@ -99,14 +105,16 @@ export function mountSite(root, { tabs, otherTabs }) {
 
     // 아래 띠: 바뀐 것 / 질문 · 활동
     bottom.className = `bottom${st.cap ? '' : st.ask ? ' ask' : ' wait'}`;
-    fill(bottomText, st.cap ? [el('span.k', {}, st.capLabel ?? '바뀐 것'), el('span', {}, st.cap)] : st.ask ? el('span', {}, st.ask) : el('span', {}, si === 0 ? '▶ 한 단계를 눌러 시작하세요.' : ''));
+    const resumeBtn = resume ? el('button.resume', { type: 'button', onclick: () => { const r = resume; resume = null; tab = r.t; view = 'data'; showAll = false; pi = r.p; si = r.s; paint({ fresh: true }); } },
+      `↪ 지난번에 멈춘 곳: ${resume.t.emoji} ${resume.t.name} ${resume.p + 1}쪽 ${resume.s + 1}단계 — 이어서 하기`) : null;
+    fill(bottomText, st.cap ? [el('span.k', {}, st.capLabel ?? '바뀐 것'), el('span', {}, st.cap)] : st.ask ? el('span', {}, st.ask)
+      : resumeBtn ?? el('span', {}, si === 0 ? '▶ 한 단계를 눌러 시작하세요.' : ''));
     counter.textContent = `${si + 1} / ${pg.steps.length}`;
     if (fresh || st.timer) setTimer(st.timer ?? null); else if (!st.timer && !st.ask) setTimer(null);
 
     drawNotes();
-    const hash = `#${tab.id}/${pi + 1}${si ? `.${si + 1}` : ''}`;
-    if (location.hash !== hash) history.replaceState(null, '', hash);
-    try { localStorage.setItem(KEY, hash); } catch { /* 저장이 막혀도 수업은 된다 */ }
+    // 위치는 주소창에 남기지 않는다(주소창 자동 완성으로 엉뚱한 쪽에서 시작하지 않게). [이어서 하기]용으로만 저장
+    if (pi > 0 || si > 0 || tab !== tabs[0]) { resume = null; try { localStorage.setItem(KEY, `#${tab.id}/${pi + 1}${si ? `.${si + 1}` : ''}`); } catch { /* 저장이 막혀도 수업은 된다 */ } }
   }
 
   function drawNotes() {
@@ -129,6 +137,14 @@ export function mountSite(root, { tabs, otherTabs }) {
     };
     if (!actions[key]) return;
     e.preventDefault(); actions[key]();
+  });
+
+  // 이미 열린 화면에서 주소에 위치를 적어 넣었을 때도 그 자리로 간다
+  window.addEventListener('hashchange', () => {
+    const l = parse(location.hash);
+    history.replaceState(null, '', location.pathname + location.search);
+    if (!l) return;
+    resume = null; tab = l.t; view = 'data'; showAll = false; pi = l.p; si = l.s; paint({ fresh: true });
   });
 
   fit(); paint();
